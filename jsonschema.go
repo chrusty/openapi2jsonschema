@@ -43,10 +43,11 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		logWithLevel(LOG_INFO, "Processing schema-definition: %s => %s", definitionName, jsonSchemaFileName)
 
 		// Derive a jsonschema:
-		definitionJSONSchema, err = convertItems(api, definitionName, definition, false)
+		definitionJSONSchema, err = convertItems(api, definitionName, definition)
 		if err != nil {
 			return err
 		}
+		definitionJSONSchema.Version = jsonschema.Version
 
 		// Marshal the JSONSchema:
 		definitionJSONSchemaJSON, err := json.MarshalIndent(definitionJSONSchema, "", "    ")
@@ -65,21 +66,16 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 }
 
 // Converts an OpenAPI "Items" into a JSON-Schema:
-func convertItems(api *openapi2proto.APIDefinition, itemName string, items *openapi2proto.Items, nested bool) (jsonschema.Type, error) {
+func convertItems(api *openapi2proto.APIDefinition, itemName string, items *openapi2proto.Items) (definitionJSONSchema jsonschema.Type, err error) {
 
-	var nestedModel openapi2proto.Model
+	var nestedProperties map[string]*openapi2proto.Items
 	var requiredProperties interface{}
 
 	// Prepare a new jsonschema:
-	definitionJSONSchema := jsonschema.Type{
+	definitionJSONSchema = jsonschema.Type{
 		Title:       items.Name,
 		Properties:  make(map[string]*jsonschema.Type),
 		Description: items.Description,
-	}
-
-	// Set the schema version (but only at the base level):
-	if !nested {
-		definitionJSONSchema.Version = jsonschema.Version
 	}
 
 	// blockAdditionalProperties will prevent validation where extra fields are found (outside of the schema):
@@ -92,35 +88,24 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 	// Either use the items we have, or lookup referenced models if required:
 	if items.Ref == "" {
 		// Regular old model:
-		nestedModel = items.Model
 		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(items.Type)
+
+		// Deal with arrays:
+		if items.Type == gojsonschema.TYPE_ARRAY {
+			nestedProperties = map[string]*openapi2proto.Items{"Items": items.Items}
+		} else {
+			nestedProperties = items.Model.Properties
+		}
 		requiredProperties = items.Required
 	} else {
 		// Referenced model:
-		_, reference, err := splitReference(items.Ref)
-		if err != nil {
-			logWithLevel(LOG_ERROR, "Failed to split a reference (%s)", items.Ref)
-			return definitionJSONSchema, err
-		}
-
-		// Look up the referenced model:
-		logWithLevel(LOG_DEBUG, "Found a referenced model (%s)", reference)
-		referencedDefinition, ok := api.Definitions[reference]
-		if !ok {
-			logWithLevel(LOG_ERROR, "Unable to find a referenced model (%s)", reference)
-			return definitionJSONSchema, fmt.Errorf("Unable to find a referenced model (%s)", reference)
-		}
-
-		// Use the model's items, type, and required-properties:
-		nestedModel = referencedDefinition.Model
-		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(referencedDefinition.Type)
-		requiredProperties = referencedDefinition.Required
+		nestedProperties, definitionJSONSchema.Type, requiredProperties, err = lookupReference(api, items.Ref)
 	}
 
 	// Recurse nested items:
-	for nestedItemsName, nestedItems := range nestedModel.Properties {
+	for nestedItemsName, nestedItems := range nestedProperties {
 		logWithLevel(LOG_DEBUG, "Processing nested-items: %s", nestedItemsName)
-		recurseddefinitionJSONSchema, err := convertItems(api, nestedItemsName, nestedItems, true)
+		recurseddefinitionJSONSchema, err := convertItems(api, nestedItemsName, nestedItems)
 		if err != nil {
 			logWithLevel(LOG_ERROR, "Failed to convert items %s in %s: %v", nestedItemsName, itemName, err)
 			return definitionJSONSchema, err
@@ -169,7 +154,8 @@ func mapOpenAPITypeToJSONSchemaType(openAPIType interface{}) string {
 	}
 }
 
-func splitReference(ref string) (string, string, error) {
+// Break up a reference path into its components:
+func splitReferencePath(ref string) (string, string, error) {
 
 	// split on '/'
 	refDatas := strings.Split(ref, "/")
@@ -179,4 +165,29 @@ func splitReference(ref string) (string, string, error) {
 		return refDatas[1], refDatas[2], nil
 	}
 	return ref, "", fmt.Errorf("Unable to split this reference (%s)", ref)
+}
+
+// Look up a reference and return its schema and metadata:
+func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, err error) {
+
+	// Break up the path:
+	_, reference, err := splitReferencePath(referencePath)
+	if err != nil {
+		return
+	}
+
+	// Look up the referenced model:
+	logWithLevel(LOG_DEBUG, "Found a referenced model (%s)", reference)
+	referencedDefinition, ok := api.Definitions[reference]
+	if !ok {
+		err = fmt.Errorf("Unable to find a referenced model (%s)", reference)
+		return
+	}
+
+	// Use the model's items, type, and required-properties:
+	nestedProperties = referencedDefinition.Model.Properties
+	definitionJSONSchemaType = mapOpenAPITypeToJSONSchemaType(referencedDefinition.Type)
+	requiredProperties = referencedDefinition.Required
+
+	return
 }

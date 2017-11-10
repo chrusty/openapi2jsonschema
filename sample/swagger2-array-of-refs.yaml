@@ -45,25 +45,24 @@ paths:
 
 definitions:
 
-  NestedUser:
+  ArrayOfUsers:
     type: object
     required:
-      - user_id
-      - user_name
+      - group_id
+      - group_name
+      - contacts
     properties:
-      user_id:
+      group_id:
         type: integer
         description: Some ID
         example: 3
-      user_name:
+      group_name:
         type: string
         description: Some name
-        example: 'Prawn'
-      contact_ref:
-        $ref: '#/definitions/ContactDetails'
-      contact_schema:
-        type: object
-        schema:
+        example: 'Prawns'
+      contacts_schema:
+        type: array
+        items:
           $ref: '#/definitions/ContactDetails'
 
   ContactDetails:
