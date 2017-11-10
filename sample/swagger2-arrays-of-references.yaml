@@ -50,7 +50,7 @@ definitions:
     required:
       - group_id
       - group_name
-      - contacts
+      - contacts_schema
     properties:
       group_id:
         type: integer
@@ -60,6 +60,21 @@ definitions:
         type: string
         description: Some name
         example: 'Prawns'
+      remarks:
+        type: array
+        items:
+          type: string
+      crufts:
+        type: array
+        items:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+            description:
+              type: string
       contacts_schema:
         type: array
         items:

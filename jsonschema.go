@@ -7,7 +7,6 @@ import (
 
 	openapi2proto "github.com/NYTimes/openapi2proto"
 	jsonschema "github.com/alecthomas/jsonschema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -16,7 +15,6 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 
 	// Output the API name:
 	logWithLevel(LOG_DEBUG, "API: %v (%v)", api.Info.Title, api.Info.Description)
-	spew.Dump(api)
 
 	// if we have no definitions then copy them from parameters:
 	if api.Definitions == nil {
@@ -73,65 +71,49 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 
 	// Prepare a new jsonschema:
 	definitionJSONSchema = jsonschema.Type{
-		Title:       items.Name,
-		Properties:  make(map[string]*jsonschema.Type),
-		Description: items.Description,
+		AdditionalProperties: generateAdditionalProperties(blockAdditionalProperties),
+		Description:          items.Description,
+		Properties:           make(map[string]*jsonschema.Type),
+		Title:                items.Name,
 	}
 
-	// blockAdditionalProperties will prevent validation where extra fields are found (outside of the schema):
-	if blockAdditionalProperties {
-		definitionJSONSchema.AdditionalProperties = []byte("false")
-	} else {
-		definitionJSONSchema.AdditionalProperties = []byte("true")
+	// Self-contained schemas:
+	if items.Schema != nil {
+		itemsMap, recurseError := recurseNestedProperties(api, map[string]*openapi2proto.Items{"schema": items.Schema})
+		err = recurseError
+		definitionJSONSchema = *itemsMap["schema"]
+		return
 	}
 
-	// Either use the items we have, or lookup referenced models if required:
-	if items.Ref == "" {
-		// Regular old model:
+	// Arrays of self-defined parameters:
+	if items.Ref == "" && items.Type == gojsonschema.TYPE_ARRAY {
+		itemsMap, recurseError := recurseNestedProperties(api, map[string]*openapi2proto.Items{"items": items.Items})
+		err = recurseError
+		definitionJSONSchema.Items = itemsMap["items"]
+	}
+
+	// Single-instances of self-defined parameters:
+	if items.Ref == "" && items.Type != gojsonschema.TYPE_ARRAY && items.Schema == nil {
 		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(items.Type)
-
-		// Deal with arrays:
-		if items.Type == gojsonschema.TYPE_ARRAY {
-			nestedProperties = map[string]*openapi2proto.Items{"Items": items.Items}
-		} else {
-			nestedProperties = items.Model.Properties
-		}
 		requiredProperties = items.Required
-	} else {
-		// Referenced model:
-		nestedProperties, definitionJSONSchema.Type, requiredProperties, err = lookupReference(api, items.Ref)
+		definitionJSONSchema.Properties, err = recurseNestedProperties(api, items.Model.Properties)
 	}
 
-	// Recurse nested items:
-	for nestedItemsName, nestedItems := range nestedProperties {
-		logWithLevel(LOG_DEBUG, "Processing nested-items: %s", nestedItemsName)
-		recurseddefinitionJSONSchema, err := convertItems(api, nestedItemsName, nestedItems)
-		if err != nil {
-			logWithLevel(LOG_ERROR, "Failed to convert items %s in %s: %v", nestedItemsName, itemName, err)
-			return definitionJSONSchema, err
-		}
-		definitionJSONSchema.Properties[nestedItemsName] = &recurseddefinitionJSONSchema
+	// Referenced models:
+	if items.Ref != "" {
+		nestedProperties, definitionJSONSchema.Type, requiredProperties, err = lookupReference(api, items.Ref)
+		definitionJSONSchema.Properties, err = recurseNestedProperties(api, nestedProperties)
 	}
 
 	// Maintain a list of required items:
 	if definitionJSONSchema.Type == gojsonschema.TYPE_OBJECT {
-
-		// Ugly type-assertion to get the list of required properties:
-		if requiredPropertiesList, ok := requiredProperties.([]interface{}); ok {
-
-			// Iterate through the required-properties list, and add them to the JSONSchema:
-			for _, requiredProperty := range requiredPropertiesList {
-				logWithLevel(LOG_DEBUG, "Adding required property (%s)", requiredProperty)
-				definitionJSONSchema.Required = append(definitionJSONSchema.Required, requiredProperty.(string))
-			}
-		} else {
-			logWithLevel(LOG_ERROR, "Failed to type-assert required-properties list")
-		}
+		definitionJSONSchema.Required = buildRequiredPropertiesList(requiredProperties)
 	}
 
-	return definitionJSONSchema, nil
+	return
 }
 
+// Map OpenAPI types to JSONSchema types:
 func mapOpenAPITypeToJSONSchemaType(openAPIType interface{}) string {
 	switch openAPIType {
 	case "array":
@@ -190,4 +172,47 @@ func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (ne
 	requiredProperties = referencedDefinition.Required
 
 	return
+}
+
+// Build a list of required-properties:
+func buildRequiredPropertiesList(requiredPropertiesInterface interface{}) (requiredProperties []string) {
+
+	// Ugly type-assertion to get the list of required properties:
+	if requiredPropertiesList, ok := requiredPropertiesInterface.([]interface{}); ok {
+
+		// Iterate through the required-properties list, and add them to the JSONSchema:
+		for _, requiredProperty := range requiredPropertiesList {
+			logWithLevel(LOG_DEBUG, "Adding required property (%s)", requiredProperty)
+			requiredProperties = append(requiredProperties, requiredProperty.(string))
+		}
+	} else {
+		logWithLevel(LOG_ERROR, "Failed to type-assert required-properties list")
+	}
+
+	return
+}
+
+func recurseNestedProperties(api *openapi2proto.APIDefinition, nestedProperties map[string]*openapi2proto.Items) (properties map[string]*jsonschema.Type, err error) {
+	properties = make(map[string]*jsonschema.Type)
+
+	// Recurse nested items:
+	for nestedItemsName, nestedItems := range nestedProperties {
+		logWithLevel(LOG_DEBUG, "Processing nested-items: %s", nestedItemsName)
+		recurseddefinitionJSONSchema, err := convertItems(api, nestedItemsName, nestedItems)
+		if err != nil {
+			return properties, fmt.Errorf("Failed to convert items %s: %v", nestedItemsName, err)
+		}
+		properties[nestedItemsName] = &recurseddefinitionJSONSchema
+	}
+
+	return
+}
+
+// disallowAdditionalProperties will prevent validation where extra fields are found (outside of the schema):
+func generateAdditionalProperties(disallowAdditionalProperties bool) []byte {
+	if disallowAdditionalProperties {
+		return []byte("false")
+	}
+
+	return []byte("true")
 }
