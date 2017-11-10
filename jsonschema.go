@@ -3,12 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	openapi2proto "github.com/NYTimes/openapi2proto"
 	jsonschema "github.com/alecthomas/jsonschema"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -17,6 +16,7 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 
 	// Output the API name:
 	logWithLevel(LOG_DEBUG, "API: %v (%v)", api.Info.Title, api.Info.Description)
+	spew.Dump(api)
 
 	// if we have no definitions then copy them from parameters:
 	if api.Definitions == nil {
@@ -43,23 +43,18 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		logWithLevel(LOG_INFO, "Processing schema-definition: %s => %s", definitionName, jsonSchemaFileName)
 
 		// Derive a jsonschema:
-		if definition.Ref != "" {
-			logWithLevel(LOG_DEBUG, "Converting nested schema-definition reference: %s (%s)", definitionName, definition.Ref)
-			definitionJSONSchema, err = convertItems(definitionName, definition, false)
-		} else {
-			logWithLevel(LOG_DEBUG, "Converting nested schema-definition: %s", definitionName)
-			definitionJSONSchema, err = convertItems(definitionName, definition, false)
-		}
+		definitionJSONSchema, err = convertItems(api, definitionName, definition, false)
 		if err != nil {
 			return err
 		}
 
+		// Marshal the JSONSchema:
 		definitionJSONSchemaJSON, err := json.MarshalIndent(definitionJSONSchema, "", "    ")
 		if err != nil {
 			return err
 		}
 
-		// Write the schemaJson out to a file:
+		// Write the schemaJSON out to a file:
 		if err := writeToFile(jsonSchemaFileName, definitionJSONSchemaJSON); err != nil {
 			return err
 		}
@@ -70,13 +65,15 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 }
 
 // Converts an OpenAPI "Items" into a JSON-Schema:
-func convertItems(itemName string, items *openapi2proto.Items, nested bool) (jsonschema.Type, error) {
+func convertItems(api *openapi2proto.APIDefinition, itemName string, items *openapi2proto.Items, nested bool) (jsonschema.Type, error) {
+
+	var nestedModel openapi2proto.Model
+	var requiredProperties interface{}
 
 	// Prepare a new jsonschema:
 	definitionJSONSchema := jsonschema.Type{
 		Title:       items.Name,
 		Properties:  make(map[string]*jsonschema.Type),
-		Type:        mapOpenAPITypeToJSONSchemaType(items.Type),
 		Description: items.Description,
 	}
 
@@ -92,10 +89,38 @@ func convertItems(itemName string, items *openapi2proto.Items, nested bool) (jso
 		definitionJSONSchema.AdditionalProperties = []byte("true")
 	}
 
+	// Either use the items we have, or lookup referenced models if required:
+	if items.Ref == "" {
+		// Regular old model:
+		nestedModel = items.Model
+		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(items.Type)
+		requiredProperties = items.Required
+	} else {
+		// Referenced model:
+		_, reference, err := splitReference(items.Ref)
+		if err != nil {
+			logWithLevel(LOG_ERROR, "Failed to split a reference (%s)", items.Ref)
+			return definitionJSONSchema, err
+		}
+
+		// Look up the referenced model:
+		logWithLevel(LOG_DEBUG, "Found a referenced model (%s)", reference)
+		referencedDefinition, ok := api.Definitions[reference]
+		if !ok {
+			logWithLevel(LOG_ERROR, "Unable to find a referenced model (%s)", reference)
+			return definitionJSONSchema, fmt.Errorf("Unable to find a referenced model (%s)", reference)
+		}
+
+		// Use the model's items, type, and required-properties:
+		nestedModel = referencedDefinition.Model
+		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(referencedDefinition.Type)
+		requiredProperties = referencedDefinition.Required
+	}
+
 	// Recurse nested items:
-	for nestedItemsName, nestedItems := range items.Model.Properties {
+	for nestedItemsName, nestedItems := range nestedModel.Properties {
 		logWithLevel(LOG_DEBUG, "Processing nested-items: %s", nestedItemsName)
-		recurseddefinitionJSONSchema, err := convertItems(nestedItemsName, nestedItems, true)
+		recurseddefinitionJSONSchema, err := convertItems(api, nestedItemsName, nestedItems, true)
 		if err != nil {
 			logWithLevel(LOG_ERROR, "Failed to convert items %s in %s: %v", nestedItemsName, itemName, err)
 			return definitionJSONSchema, err
@@ -107,7 +132,7 @@ func convertItems(itemName string, items *openapi2proto.Items, nested bool) (jso
 	if definitionJSONSchema.Type == gojsonschema.TYPE_OBJECT {
 
 		// Ugly type-assertion to get the list of required properties:
-		if requiredPropertiesList, ok := items.Required.([]interface{}); ok {
+		if requiredPropertiesList, ok := requiredProperties.([]interface{}); ok {
 
 			// Iterate through the required-properties list, and add them to the JSONSchema:
 			for _, requiredProperty := range requiredPropertiesList {
@@ -120,34 +145,6 @@ func convertItems(itemName string, items *openapi2proto.Items, nested bool) (jso
 	}
 
 	return definitionJSONSchema, nil
-}
-
-func deriveSpecPathFileName(specPath string) string {
-	_, sourceFileName := filepath.Split(specPath)
-	return strings.TrimSuffix(sourceFileName, filepath.Ext(sourceFileName))
-}
-
-func generateFileName(outputFileNameWithoutExtention string) string {
-	return fmt.Sprintf("%s/%s.%s", outPath, outputFileNameWithoutExtention, JSONSCHEMA_FILE_EXTENTION)
-}
-
-func writeToFile(fileName string, fileData []byte) error {
-
-	// Open output file:
-	outputFile, err := os.Create(fileName)
-	if err != nil {
-		logWithLevel(LOG_FATAL, "Can't open output file (%v): %v", fileName, err)
-		return err
-	}
-	defer outputFile.Close()
-
-	// Write to the file:
-	if _, err := outputFile.Write(fileData); err != nil {
-		logWithLevel(LOG_FATAL, "Can't write to file (%v): %v", fileName, err)
-		return err
-	}
-
-	return nil
 }
 
 func mapOpenAPITypeToJSONSchemaType(openAPIType interface{}) string {
@@ -164,10 +161,22 @@ func mapOpenAPITypeToJSONSchemaType(openAPIType interface{}) string {
 		return gojsonschema.TYPE_OBJECT
 	case "string":
 		return gojsonschema.TYPE_STRING
-	case "":
+	case nil, "":
 		return gojsonschema.TYPE_NULL
 	default:
 		logWithLevel(LOG_WARN, "Can't determine JSONSchema type (%v)", openAPIType)
-		return gojsonschema.TYPE_OBJECT
+		return gojsonschema.TYPE_NULL
 	}
+}
+
+func splitReference(ref string) (string, string, error) {
+
+	// split on '/'
+	refDatas := strings.Split(ref, "/")
+
+	// Return the 2nd and 3rd components (source and definition name):
+	if len(refDatas) > 1 {
+		return refDatas[1], refDatas[2], nil
+	}
+	return ref, "", fmt.Errorf("Unable to split this reference (%s)", ref)
 }

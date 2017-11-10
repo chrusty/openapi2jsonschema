@@ -3,7 +3,7 @@ info:
   description: >-
     Test Swagger yaml
   version: ${api-version}
-  title: Example API
+  title: Example API - Nested
   contact:
     email: example@text.com
 host: test.sample.com
@@ -28,12 +28,12 @@ paths:
           description: request body
           required: true
           schema:
-            $ref: '#/definitions/SampleRequest'
+            $ref: '#/definitions/NestedRequest'
       responses:
         '200':
           description: Success
           schema:
-            $ref: '#/definitions/SampleResponse'
+            $ref: '#/definitions/NestedResponse'
         '400':
           description: Invalid input
         '401':
@@ -45,30 +45,36 @@ paths:
 
 definitions:
 
-  SampleRequest:
+  NestedUser:
     type: object
     required:
-      - id
-      - name
+      - user_id
+      - user_name
     properties:
-      id:
-        type: string
+      user_id:
+        type: integer
         description: Some ID
-        example: "3"
-      name:
+        example: 3
+      user_name:
         type: string
         description: Some name
         example: 'Prawn'
+      contact:
+        $ref: '#/definitions/ContactDetails'
 
-  SampleResponse:
+  ContactDetails:
     type: object
     required:
-      - code
+      - email_address
     properties:
-      code:
+      first_name:
         type: string
-        description: Response code
-        example: '123'
-      message:
+      last_name:
         type: string
-        description: A verbose message
+      email_address:
+        type: string
+      phone_number:
+        type: string
+      spam:
+        type: boolean
+        description: Send this person spam?
