@@ -64,7 +64,7 @@ func writeAllJSONSchemasToGoConstants(generatedJSONSchemas map[string][]byte) er
 
 	// Go through the JSONSchemas and write each one to a file:
 	for definitionName, definitionJSONSchemaJSON := range generatedJSONSchemas {
-		definitionConstant := fmt.Sprintf("const %s_%s string = `%s`\n\n", specFileName, definitionName, definitionJSONSchemaJSON)
+		definitionConstant := fmt.Sprintf("const Schema%s%s string = `%s`\n\n", strings.Title(specFileName), strings.Title(definitionName), definitionJSONSchemaJSON)
 		goConstantsCode = append(goConstantsCode, definitionConstant...)
 	}
 
