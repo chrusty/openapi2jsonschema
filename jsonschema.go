@@ -10,8 +10,11 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// GenerateJSONSchemas takes an openAPI *APIDefinition and converts it into JSONSchema files (in the "output" directory):
+// GenerateJSONSchemas takes an openAPI *APIDefinition and converts it into JSONSchemas:
 func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
+
+	// Store the output in here:
+	var generatedJSONSchemas = make(map[string][]byte)
 
 	// Output the API name:
 	logWithLevel(LOG_DEBUG, "API: %v (%v)", api.Info.Title, api.Info.Description)
@@ -34,11 +37,8 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		var definitionJSONSchema jsonschema.Type
 		var err error
 
-		// Generate a filename to store the JSONSchema in:
-		jsonSchemaFileName := generateFileName(definitionName)
-
 		// Report:
-		logWithLevel(LOG_INFO, "Processing schema-definition: %s => %s", definitionName, jsonSchemaFileName)
+		logWithLevel(LOG_INFO, "Processing schema-definition: %s", definitionName)
 
 		// Derive a jsonschema:
 		definitionJSONSchema, err = convertItems(api, definitionName, definition)
@@ -48,19 +48,18 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		definitionJSONSchema.Version = jsonschema.Version
 
 		// Marshal the JSONSchema:
-		definitionJSONSchemaJSON, err := json.MarshalIndent(definitionJSONSchema, "", "    ")
+		generatedJSONSchemas[definitionName], err = json.MarshalIndent(definitionJSONSchema, "", "    ")
 		if err != nil {
-			return err
-		}
-
-		// Write the schemaJSON out to a file:
-		if err := writeToFile(jsonSchemaFileName, definitionJSONSchemaJSON); err != nil {
 			return err
 		}
 	}
 
-	return
+	// Generate a GoConstants file (if we've been asked to):
+	if goConstants {
+		writeAllJSONSchemasToGoConstants(generatedJSONSchemas)
+	}
 
+	return writeAllJSONSchemasToFile(generatedJSONSchemas)
 }
 
 // Converts an OpenAPI "Items" into a JSON-Schema:
@@ -186,7 +185,7 @@ func buildRequiredPropertiesList(requiredPropertiesInterface interface{}) (requi
 			requiredProperties = append(requiredProperties, requiredProperty.(string))
 		}
 	} else {
-		logWithLevel(LOG_ERROR, "Failed to type-assert required-properties list")
+		logWithLevel(LOG_DEBUG, "Failed to type-assert required-properties list")
 	}
 
 	return

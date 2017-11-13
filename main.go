@@ -18,11 +18,13 @@ const (
 	LOG_PANIC = 5
 
 	JSONSCHEMA_FILE_EXTENTION = "jsonschema"
+	GO_CONSTANTS_FILENAME     = "jsonschemas"
 )
 
 var (
 	blockAdditionalProperties bool
 	debugLogging              bool
+	goConstants               bool
 	outPath, specPath         string
 	logLevels                 = map[LogLevel]string{
 		0: "DEBUG",
@@ -56,6 +58,7 @@ func logWithLevel(logLevel LogLevel, logFormat string, logParams ...interface{})
 func init() {
 	flag.BoolVar(&blockAdditionalProperties, "block_additional_properties", false, "Block additional properties")
 	flag.BoolVar(&debugLogging, "debug", false, "Log debug messages")
+	flag.BoolVar(&goConstants, "go_constants", false, "Output GoLang constants (in addition to JSONSchemas)")
 	flag.StringVar(&specPath, "spec", "../../spec.yaml", "location of the swagger spec file")
 	flag.StringVar(&outPath, "out", "./out", "where to write jsonschema output files to")
 }
