@@ -23,4 +23,9 @@ definitions:
         type: string
         description: 'Phone number'
         example: '+447123456789'
+        pattern: '^[\d|\+|\(]+[\)|\d|\s|-]*[\d]$'
+      locale:
+        type: string
+        description: 'BCP 47 locale string'
+        example: 'en_GB'
         pattern: '^[a-z]{2}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}))?$'
