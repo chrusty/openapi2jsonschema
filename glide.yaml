@@ -1,0 +1,7 @@
+package: github.com/chrusty/openapi2jsonschema
+import:
+- package: github.com/NYTimes/openapi2proto
+- package: github.com/alecthomas/jsonschema
+- package: github.com/pkg/errors
+- package: github.com/xeipuuv/gojsonschema
+- package: gopkg.in/yaml.v2

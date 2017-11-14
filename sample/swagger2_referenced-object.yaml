@@ -1,0 +1,44 @@
+swagger: '2.0'
+info:
+  description: 'A sample object containing a referenced object'
+  title: 'Sample: referenced object'
+
+definitions:
+
+  ObjectWithReferencedObject:
+    type: object
+    required:
+      - user_id
+      - user_name
+    properties:
+      user_id:
+        type: integer
+        description: Some ID
+        example: 3
+      user_name:
+        type: string
+        description: 'Some name'
+        example: 'Prawn'
+      contact_ref:
+        $ref: '#/definitions/ReferencedObject'
+      contact_schema:
+        type: object
+        schema:
+          $ref: '#/definitions/ReferencedObject'
+
+  ReferencedObject:
+    type: object
+    required:
+      - email_address
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      email_address:
+        type: string
+      phone_number:
+        type: string
+      spam:
+        type: boolean
+        description: 'Send this person spam?'

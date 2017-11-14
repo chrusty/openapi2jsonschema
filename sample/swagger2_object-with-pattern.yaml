@@ -1,0 +1,26 @@
+swagger: '2.0'
+info:
+  description: 'A sample object with a validation pattern (regex)'
+  title: 'Sample: object with pattern'
+
+definitions:
+
+  ObjectWithPattern:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+        description: 'Some ID'
+        example: 'xyz'
+      name:
+        type: string
+        description: 'Some name'
+        example: 'Prawn'
+      phone_number:
+        type: string
+        description: 'Phone number'
+        example: '+447123456789'
+        pattern: '^[a-z]{2}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}))?$'
