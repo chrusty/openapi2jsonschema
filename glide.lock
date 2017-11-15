@@ -1,10 +1,10 @@
-hash: ad66bad700245ad4a9019f2f895a6878b72d84f04f4987b845a5c21548a75af9
-updated: 2017-11-14T09:36:28.751312661Z
+hash: b71600bfcefa71f1b2e2e90f75fae8c6bdc517bd10eb5fb34a8c6cfa18fcf7fa
+updated: 2017-11-15T10:31:44.645288701Z
 imports:
 - name: github.com/alecthomas/jsonschema
   version: c86885e0c9addf613840ec23eabcc9dfca60ab78
 - name: github.com/NYTimes/openapi2proto
-  version: 8f6801f931bde343ef2baabce83f8a6ebcf51514
+  version: 5c666f94fbec6084fbc26e1b2692d8030a02e911
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/xeipuuv/gojsonpointer
@@ -12,7 +12,7 @@ imports:
 - name: github.com/xeipuuv/gojsonreference
   version: e02fc20de94c78484cd5ffb007f8af96be030a45
 - name: github.com/xeipuuv/gojsonschema
-  version: 212d8a0df7acfab8bdd190a7a69f0ab7376edcc8
+  version: 3f523f4c14b6e925da10475eb0447c2f28614aac
 - name: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports: []

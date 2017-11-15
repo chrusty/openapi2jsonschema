@@ -71,7 +71,9 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 	// Prepare a new jsonschema:
 	definitionJSONSchema = jsonschema.Type{
 		AdditionalProperties: generateAdditionalProperties(blockAdditionalProperties),
-		Description:          items.Description,
+		Description:          strings.Replace(items.Description, "`", "'", -1),
+		MaxLength:            items.MaxLength,
+		MinLength:            items.MinLength,
 		Pattern:              items.Pattern,
 		Properties:           make(map[string]*jsonschema.Type),
 		Title:                items.Name,
