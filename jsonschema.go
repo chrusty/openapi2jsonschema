@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	openapi2proto "github.com/NYTimes/openapi2proto"
@@ -10,11 +11,16 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+type GeneratedJSONSchema struct {
+	Name  string
+	Bytes []byte
+}
+
 // GenerateJSONSchemas takes an openAPI *APIDefinition and converts it into JSONSchemas:
 func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 
 	// Store the output in here:
-	var generatedJSONSchemas = make(map[string][]byte)
+	var generatedJSONSchemas []GeneratedJSONSchema
 
 	// Output the API name:
 	logWithLevel(LOG_DEBUG, "API: %v (%v)", api.Info.Title, api.Info.Description)
@@ -35,6 +41,7 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 	for definitionName, definition := range api.Definitions {
 
 		var definitionJSONSchema jsonschema.Type
+		var generatedJSONSchema GeneratedJSONSchema
 		var err error
 
 		// Report:
@@ -48,17 +55,25 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		definitionJSONSchema.Version = jsonschema.Version
 
 		// Marshal the JSONSchema:
-		generatedJSONSchemas[definitionName], err = json.MarshalIndent(definitionJSONSchema, "", "    ")
+		generatedJSONSchema.Name = definitionName
+		generatedJSONSchema.Bytes, err = json.MarshalIndent(definitionJSONSchema, "", "    ")
 		if err != nil {
 			return err
 		}
+
+		// Append the new jsonschema to our list:
+		generatedJSONSchemas = append(generatedJSONSchemas, generatedJSONSchema)
 	}
+
+	// Sort the results (so they come out in a consistent order):
+	sort.Slice(generatedJSONSchemas, func(i, j int) bool { return generatedJSONSchemas[i].Name < generatedJSONSchemas[j].Name })
 
 	// Generate a GoConstants file (if we've been asked to):
 	if goConstants {
 		writeAllJSONSchemasToGoConstants(generatedJSONSchemas)
 	}
 
+	// Also write them all out to jsonschema files:
 	return writeAllJSONSchemasToFile(generatedJSONSchemas)
 }
 

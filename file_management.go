@@ -35,26 +35,26 @@ func writeToFile(fileName string, fileData []byte) error {
 	return nil
 }
 
-func writeAllJSONSchemasToFile(generatedJSONSchemas map[string][]byte) error {
+func writeAllJSONSchemasToFile(generatedJSONSchemas []GeneratedJSONSchema) error {
 
 	// Go through the JSONSchemas and write each one to a file:
-	for definitionName, definitionJSONSchemaJSON := range generatedJSONSchemas {
+	for _, generatedJSONSchema := range generatedJSONSchemas {
 
 		// Generate a filename to store the JSONSchema in:
-		jsonSchemaFileName := generateFileName(definitionName)
+		jsonSchemaFileName := generateFileName(generatedJSONSchema.Name)
 
 		// Write the schemaJSON out to a file:
-		if err := writeToFile(jsonSchemaFileName, definitionJSONSchemaJSON); err != nil {
+		if err := writeToFile(jsonSchemaFileName, generatedJSONSchema.Bytes); err != nil {
 			return err
 		}
 
-		logWithLevel(LOG_DEBUG, "Wrote schema-definition (%s) to a file: %v", definitionName, jsonSchemaFileName)
+		logWithLevel(LOG_DEBUG, "Wrote schema-definition (%s) to a file: %v", generatedJSONSchema.Name, jsonSchemaFileName)
 	}
 
 	return nil
 }
 
-func writeAllJSONSchemasToGoConstants(generatedJSONSchemas map[string][]byte) error {
+func writeAllJSONSchemasToGoConstants(generatedJSONSchemas []GeneratedJSONSchema) error {
 
 	goConstantsCode := []byte("package schema\n\n")
 
@@ -63,8 +63,8 @@ func writeAllJSONSchemasToGoConstants(generatedJSONSchemas map[string][]byte) er
 	goConstantsFilename := fmt.Sprintf("%v/%v_%v.go", outPath, GO_CONSTANTS_FILENAME, specFileName)
 
 	// Go through the JSONSchemas and write each one to a file:
-	for definitionName, definitionJSONSchemaJSON := range generatedJSONSchemas {
-		definitionConstant := fmt.Sprintf("const Schema%s%s string = `%s`\n\n", strings.Title(specFileName), strings.Title(definitionName), definitionJSONSchemaJSON)
+	for _, generatedJSONSchema := range generatedJSONSchemas {
+		definitionConstant := fmt.Sprintf("const Schema%s%s string = `%s`\n\n", strings.Title(specFileName), strings.Title(generatedJSONSchema.Name), generatedJSONSchema.Bytes)
 		goConstantsCode = append(goConstantsCode, definitionConstant...)
 	}
 
