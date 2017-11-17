@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	openapi2proto "github.com/NYTimes/openapi2proto"
@@ -64,11 +65,15 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		generatedJSONSchemas = append(generatedJSONSchemas, generatedJSONSchema)
 	}
 
+	// Sort the results (so they come out in a consistent order):
+	sort.Slice(generatedJSONSchemas, func(i, j int) bool { return generatedJSONSchemas[i].Name < generatedJSONSchemas[j].Name })
+
 	// Generate a GoConstants file (if we've been asked to):
 	if goConstants {
 		writeAllJSONSchemasToGoConstants(generatedJSONSchemas)
 	}
 
+	// Also write them all out to jsonschema files:
 	return writeAllJSONSchemasToFile(generatedJSONSchemas)
 }
 
