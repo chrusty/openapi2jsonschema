@@ -92,7 +92,6 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 
 // Converts an OpenAPI "Items" into a JSON-Schema:
 func convertItems(api *openapi2proto.APIDefinition, itemName string, items *openapi2proto.Items) (definitionJSONSchema jsonschema.Type, err error) {
-
 	var nestedProperties map[string]*openapi2proto.Items
 	var requiredProperties interface{}
 
@@ -127,21 +126,15 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(items.Type)
 		requiredProperties = items.Required
 		definitionJSONSchema.Properties, err = recurseNestedProperties(api, items.Model.Properties)
-		for i := range items.Enum {
-			var value interface{}
-			if items.Type == gojsonschema.TYPE_NUMBER {
-				value, _ = strconv.Atoi(items.Enum[i])
-			} else {
-				value = items.Enum[i]
-			}
-			definitionJSONSchema.Enum = append(definitionJSONSchema.Enum, value)
-		}
+		definitionJSONSchema.Enum = mapEnums(items.Enum, items.Type)
 	}
 
 	// Referenced models:
 	if items.Ref != "" {
-		nestedProperties, definitionJSONSchema.Type, requiredProperties, err = lookupReference(api, items.Ref)
+		var enum []string
+		nestedProperties, definitionJSONSchema.Type, requiredProperties, enum, err = lookupReference(api, items.Ref)
 		definitionJSONSchema.Properties, err = recurseNestedProperties(api, nestedProperties)
+		definitionJSONSchema.Enum = mapEnums(enum, definitionJSONSchema.Type)
 	}
 
 	// Maintain a list of required items:
@@ -150,6 +143,22 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 	}
 
 	return
+}
+
+func mapEnums(items []string, itemsType interface{}) []interface{} {
+	var result []interface{}
+
+	for _, item := range items {
+		var value interface{}
+		if itemsType == gojsonschema.TYPE_NUMBER {
+			value, _ = strconv.Atoi(item)
+		} else {
+			value = item
+		}
+		result = append(result, value)
+	}
+
+	return result
 }
 
 // Map OpenAPI types to JSONSchema types:
@@ -189,7 +198,7 @@ func splitReferencePath(ref string) (string, string, error) {
 }
 
 // Look up a reference and return its schema and metadata:
-func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, err error) {
+func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, enum []string, err error) {
 
 	// Break up the path:
 	_, reference, err := splitReferencePath(referencePath)
@@ -209,6 +218,7 @@ func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (ne
 	nestedProperties = referencedDefinition.Model.Properties
 	definitionJSONSchemaType = mapOpenAPITypeToJSONSchemaType(referencedDefinition.Type)
 	requiredProperties = referencedDefinition.Required
+	enum = referencedDefinition.Enum
 
 	return
 }
