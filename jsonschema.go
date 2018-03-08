@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	openapi2proto "github.com/NYTimes/openapi2proto"
 	jsonschema "github.com/alecthomas/jsonschema"
+	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -16,14 +18,8 @@ type GeneratedJSONSchema struct {
 	Bytes []byte
 }
 
-// GenerateJSONSchemas takes an openAPI *APIDefinition and converts it into JSONSchemas:
-func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
-
-	// Store the output in here:
+func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.APIDefinition) ([]GeneratedJSONSchema, error) {
 	var generatedJSONSchemas []GeneratedJSONSchema
-
-	// Output the API name:
-	logWithLevel(LOG_DEBUG, "API: %v (%v)", api.Info.Title, api.Info.Description)
 
 	// if we have no definitions then copy them from parameters:
 	if api.Definitions == nil {
@@ -50,7 +46,8 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		// Derive a jsonschema:
 		definitionJSONSchema, err = convertItems(api, definitionName, definition)
 		if err != nil {
-			return err
+			return nil, errors.Wrap(err, "could not derive a json schema")
+
 		}
 		definitionJSONSchema.Version = jsonschema.Version
 
@@ -58,7 +55,7 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 		generatedJSONSchema.Name = definitionName
 		generatedJSONSchema.Bytes, err = json.MarshalIndent(definitionJSONSchema, "", "    ")
 		if err != nil {
-			return err
+			return nil, errors.Wrap(err, "could not marshall json schema")
 		}
 
 		// Append the new jsonschema to our list:
@@ -67,6 +64,22 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 
 	// Sort the results (so they come out in a consistent order):
 	sort.Slice(generatedJSONSchemas, func(i, j int) bool { return generatedJSONSchemas[i].Name < generatedJSONSchemas[j].Name })
+
+	return generatedJSONSchemas, nil
+
+}
+
+// GenerateJSONSchemas takes an openAPI *APIDefinition and converts it into JSONSchemas:
+func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
+
+	// Store the output in here:
+	generatedJSONSchemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
+	if err != nil {
+		return errors.Wrap(err, "could not map openapi definitions to jsonschema")
+	}
+
+	// Output the API name:
+	logWithLevel(LOG_DEBUG, "API: %v (%v)", api.Info.Title, api.Info.Description)
 
 	// Generate a GoConstants file (if we've been asked to):
 	if goConstants {
@@ -79,7 +92,6 @@ func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
 
 // Converts an OpenAPI "Items" into a JSON-Schema:
 func convertItems(api *openapi2proto.APIDefinition, itemName string, items *openapi2proto.Items) (definitionJSONSchema jsonschema.Type, err error) {
-
 	var nestedProperties map[string]*openapi2proto.Items
 	var requiredProperties interface{}
 
@@ -114,12 +126,15 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(items.Type)
 		requiredProperties = items.Required
 		definitionJSONSchema.Properties, err = recurseNestedProperties(api, items.Model.Properties)
+		definitionJSONSchema.Enum = mapEnums(items.Enum, items.Type)
 	}
 
 	// Referenced models:
 	if items.Ref != "" {
-		nestedProperties, definitionJSONSchema.Type, requiredProperties, err = lookupReference(api, items.Ref)
+		var enum []string
+		nestedProperties, definitionJSONSchema.Type, requiredProperties, enum, err = lookupReference(api, items.Ref)
 		definitionJSONSchema.Properties, err = recurseNestedProperties(api, nestedProperties)
+		definitionJSONSchema.Enum = mapEnums(enum, definitionJSONSchema.Type)
 	}
 
 	// Maintain a list of required items:
@@ -128,6 +143,22 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 	}
 
 	return
+}
+
+func mapEnums(items []string, itemsType interface{}) []interface{} {
+	var result []interface{}
+
+	for _, item := range items {
+		var value interface{}
+		if itemsType == gojsonschema.TYPE_NUMBER {
+			value, _ = strconv.Atoi(item)
+		} else {
+			value = item
+		}
+		result = append(result, value)
+	}
+
+	return result
 }
 
 // Map OpenAPI types to JSONSchema types:
@@ -167,7 +198,7 @@ func splitReferencePath(ref string) (string, string, error) {
 }
 
 // Look up a reference and return its schema and metadata:
-func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, err error) {
+func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, enum []string, err error) {
 
 	// Break up the path:
 	_, reference, err := splitReferencePath(referencePath)
@@ -187,6 +218,7 @@ func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (ne
 	nestedProperties = referencedDefinition.Model.Properties
 	definitionJSONSchemaType = mapOpenAPITypeToJSONSchemaType(referencedDefinition.Type)
 	requiredProperties = referencedDefinition.Required
+	enum = referencedDefinition.Enum
 
 	return
 }
