@@ -1,5 +1,5 @@
-hash: b71600bfcefa71f1b2e2e90f75fae8c6bdc517bd10eb5fb34a8c6cfa18fcf7fa
-updated: 2017-11-15T10:31:44.645288701Z
+hash: 172137e7ca7820e9b27aed2dc3ea0084038a7009d64e946df48daaee7f15cc87
+updated: 2018-03-13T13:18:40.112537Z
 imports:
 - name: github.com/alecthomas/jsonschema
   version: c86885e0c9addf613840ec23eabcc9dfca60ab78
@@ -7,6 +7,11 @@ imports:
   version: 5c666f94fbec6084fbc26e1b2692d8030a02e911
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/stretchr/testify
+  version: 12b6f73e6084dad08a7c6e575284b177ecafbc71
+  subpackages:
+  - assert
+  - require
 - name: github.com/xeipuuv/gojsonpointer
   version: 6fe8760cad3569743d51ddbb243b26f8456742dc
 - name: github.com/xeipuuv/gojsonreference
@@ -15,4 +20,12 @@ imports:
   version: 3f523f4c14b6e925da10475eb0447c2f28614aac
 - name: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib

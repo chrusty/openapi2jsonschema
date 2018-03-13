@@ -6,3 +6,4 @@ import:
 - package: github.com/pkg/errors
 - package: github.com/xeipuuv/gojsonschema
 - package: gopkg.in/yaml.v2
+- package: github.com/stretchr/testify

@@ -5,7 +5,7 @@ info:
 
 definitions:
 
-  FlatObject:
+  FlatObjectWithEnum:
     type: object
     required:
       - id
