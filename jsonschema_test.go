@@ -38,6 +38,7 @@ func Test_GenerateJSONSchemas_FlatObject(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
@@ -70,6 +71,7 @@ func Test_GenerateJSONSchemas_FlatObjectWithEnum(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
@@ -164,6 +166,7 @@ func Test_GenerateJSONSchemas_ObjectWithArrays(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 2, "Unexpected number of schemas returned")
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
@@ -209,6 +212,7 @@ func Test_GenerateJSONSchemas_ObjectWithPattern(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
@@ -302,5 +306,6 @@ func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 2, "Unexpected number of schemas returned")
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
