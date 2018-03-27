@@ -139,6 +139,22 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 
 	// Maintain a list of required items:
 	if definitionJSONSchema.Type == gojsonschema.TYPE_OBJECT {
+
+		// if we have any nested items in the object then we should process
+		// them
+		if item := items.AdditionalProperties; item != nil {
+			var schema jsonschema.Type
+			var raw json.RawMessage
+			schema, err = convertItems(api, item.Name, item)
+
+			// Annoyingly since "additionalProperties" can actually be a
+			// boolean or an object we have to marshal the resulting schema
+			// so we can assign the raw bytes to back
+			raw, err = json.Marshal(schema)
+			definitionJSONSchema.AdditionalProperties = raw
+			return
+		}
+
 		definitionJSONSchema.Required = buildRequiredPropertiesList(requiredProperties)
 	}
 

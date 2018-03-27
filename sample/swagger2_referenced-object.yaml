@@ -25,6 +25,10 @@ definitions:
         type: object
         schema:
           $ref: '#/definitions/ReferencedObject'
+      contact_additional_props_map:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/ReferencedObject'
 
   ReferencedObject:
     type: object
