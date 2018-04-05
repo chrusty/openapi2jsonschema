@@ -20,7 +20,8 @@ func Test_GenerateJSONSchemas_FlatObject(t *testing.T) {
         "id": {
             "additionalProperties": true,
             "type": "string",
-            "description": "Some ID"
+            "description": "Some ID",
+            "format": "date-time"
         },
         "name": {
             "additionalProperties": true,
