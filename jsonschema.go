@@ -127,6 +127,10 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 		requiredProperties = items.Required
 		definitionJSONSchema.Properties, err = recurseNestedProperties(api, items.Model.Properties)
 		definitionJSONSchema.Enum = mapEnums(items.Enum, items.Type)
+
+		if items.Format != nil {
+			definitionJSONSchema.Format = items.Format.(string)
+		}
 	}
 
 	// Referenced models:
