@@ -343,3 +343,35 @@ func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
 	assert.Len(t, schemas, 2, "Unexpected number of schemas returned")
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
+
+func Test_GenerateJSONSchemas_NumberWithMinMax(t *testing.T) {
+
+	var expectedSchema = `{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "required": [
+        "latitude"
+    ],
+    "properties": {
+        "latitude": {
+            "maximum": 90,
+            "minimum": -90,
+            "additionalProperties": true,
+            "type": "number",
+            "description": "The latitude in degrees. It must be in the range [-90.0, +90.0]",
+            "format": "double"
+        }
+    },
+    "additionalProperties": true,
+    "type": "object",
+    "description": "Specifies a geographic location in terms of its Latitude and Longitude"
+}`
+
+	api, err := openapi2proto.LoadDefinition("sample/swagger2_flat-object-with-number-options.yaml")
+	require.NoError(t, err)
+	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
+	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+}

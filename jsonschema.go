@@ -104,6 +104,8 @@ func convertItems(api *openapi2proto.APIDefinition, itemName string, items *open
 		Pattern:              items.Pattern,
 		Properties:           make(map[string]*jsonschema.Type),
 		Title:                items.Name,
+		Minimum:              items.Minimum,
+		Maximum:              items.Maximum,
 	}
 
 	// Self-contained schemas:

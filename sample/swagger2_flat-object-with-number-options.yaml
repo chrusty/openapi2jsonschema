@@ -1,0 +1,19 @@
+swagger: '2.0'
+info:
+  description: 'A sample object containing standard properties'
+  title: 'Sample: flat object'
+
+definitions:
+
+  LatLong:
+    type: object
+    description: Specifies a geographic location in terms of its Latitude and Longitude
+    required:
+      - latitude
+    properties:
+      latitude:
+        type: number
+        format: double
+        description: 'The latitude in degrees. It must be in the range [-90.0, +90.0]'
+        minimum: -90
+        maximum: 90
