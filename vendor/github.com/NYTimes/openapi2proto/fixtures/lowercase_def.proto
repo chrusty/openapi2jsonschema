@@ -1,11 +1,10 @@
 syntax = "proto3";
 
-import "google/protobuf/empty.proto";
-
 package lowercaseapi;
 
-message Item {
-}
+import "google/protobuf/empty.proto";
+
+message Item {}
 
 service LowercaseAPIService {
     // Lowercase Response

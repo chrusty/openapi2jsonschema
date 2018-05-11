@@ -1,10 +1,17 @@
-hash: 172137e7ca7820e9b27aed2dc3ea0084038a7009d64e946df48daaee7f15cc87
-updated: 2018-03-13T13:18:40.112537Z
+hash: 06a297153dc2354720ed7850f60fcfa9ea1ec29265944d39392043dc8cb91f4b
+updated: 2018-05-11T10:16:34.072615+01:00
 imports:
 - name: github.com/alecthomas/jsonschema
-  version: c86885e0c9addf613840ec23eabcc9dfca60ab78
+  version: f2c93856175a7dd6abe88c5c3900b67ad054adcc
+- name: github.com/dolmen-go/jsonptr
+  version: 1c352ec474fc378d7dfa4115433ef13d0276b526
 - name: github.com/NYTimes/openapi2proto
-  version: 5c666f94fbec6084fbc26e1b2692d8030a02e911
+  version: 5455d470025633b0a6461730122c37db4e140e1d
+  subpackages:
+  - compiler
+  - internal/option
+  - openapi
+  - protobuf
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/stretchr/testify
@@ -13,19 +20,19 @@ imports:
   - assert
   - require
 - name: github.com/xeipuuv/gojsonpointer
-  version: 6fe8760cad3569743d51ddbb243b26f8456742dc
+  version: 4e3ac2762d5f479393488629ee9370b50873b3a6
 - name: github.com/xeipuuv/gojsonreference
-  version: e02fc20de94c78484cd5ffb007f8af96be030a45
+  version: bd5ef7bd5415a7ac448318e64f11a24cd21e594b
 - name: github.com/xeipuuv/gojsonschema
-  version: 3f523f4c14b6e925da10475eb0447c2f28614aac
+  version: 2c8e4be869c17540b336bab0ea18b8d73e6a28b7
 - name: gopkg.in/yaml.v2
-  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
+  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
