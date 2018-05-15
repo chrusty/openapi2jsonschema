@@ -112,16 +112,22 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 		Maximum:              openAPISchema.Maximum,
 	}
 
-	// Self-contained schemas:
-	if openAPISchema.Items != nil {
-		itemsMap, recurseError := recurseNestedSchemas(openAPISpec, map[string]*openAPI.Schema{"items": openAPISchema.Items})
-		err = recurseError
-		definitionJSONSchema = *itemsMap["items"]
-		return
-	}
+	// fmt.Printf("openAPISchema.Items == nil:                           %v\n", openAPISchema.Items == nil)
+	// fmt.Printf("openAPISchema.Ref == '':                              %v\n", openAPISchema.Ref == "")
+	// fmt.Printf("openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY): %v\n", openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY))
+
+	// // Self-contained schemas:
+	// if openAPISchema.Items != nil {
+	// 	fmt.Println(" => Self-contained schemas")
+	// 	itemsMap, recurseError := recurseNestedSchemas(openAPISpec, map[string]*openAPI.Schema{"items": openAPISchema.Items})
+	// 	err = recurseError
+	// 	definitionJSONSchema = *itemsMap["items"]
+	// 	return
+	// }
 
 	// Arrays of self-defined parameters:
 	if openAPISchema.Ref == "" && openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY) {
+		// fmt.Println(" => Arrays of self-defined parameters")
 		itemsMap, recurseError := recurseNestedSchemas(openAPISpec, map[string]*openAPI.Schema{"items": openAPISchema.Items})
 		err = recurseError
 		definitionJSONSchema.Items = itemsMap["items"]
@@ -129,6 +135,7 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 
 	// Single-instances of self-defined parameters:
 	if openAPISchema.Ref == "" && !openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY) && openAPISchema.Items == nil {
+		// fmt.Println(" => Single-instances of self-defined parameters")
 		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)
 		requiredProperties = openAPISchema.Required
 		definitionJSONSchema.Properties, err = recurseNestedSchemas(openAPISpec, openAPISchema.Properties)
@@ -142,6 +149,7 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 
 	// Referenced models:
 	if openAPISchema.Ref != "" {
+		// fmt.Println(" => Referenced models")
 		var enum []string
 		nestedProperties, definitionJSONSchema.Type, requiredProperties, enum, err = lookupReference(openAPISpec, openAPISchema.Ref)
 		definitionJSONSchema.Properties, err = recurseNestedSchemas(openAPISpec, nestedProperties)
@@ -150,6 +158,7 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 
 	// Maintain a list of required items:
 	if definitionJSONSchema.Type == gojsonschema.TYPE_OBJECT {
+		// fmt.Println(" => Object")
 
 		// if we have any nested items in the object then we should process them
 		if additionalPropertiesSchema := openAPISchema.AdditionalProperties; additionalPropertiesSchema != nil {
