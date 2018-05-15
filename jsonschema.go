@@ -97,7 +97,6 @@ func MapOpenAPIDefinitionsToJSONSchema(openAPISpec *openAPI.Spec) ([]GeneratedJS
 // Converts an OpenAPI "Items" into a JSON-Schema:
 func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *openAPI.Schema) (definitionJSONSchema jsonSchema.Type, err error) {
 	var nestedProperties map[string]*openAPI.Schema
-	var requiredProperties []string
 
 	// Prepare a new jsonschema:
 	definitionJSONSchema = jsonSchema.Type{
@@ -129,8 +128,15 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 
 	// Single-instances of self-defined parameters:
 	if openAPISchema.Ref == "" && !openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY) && openAPISchema.Items == nil {
-		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)
-		requiredProperties = openAPISchema.Required
+		if allowNullValues {
+			definitionJSONSchema.OneOf = []*jsonSchema.Type{
+				{Type: gojsonschema.TYPE_NULL},
+				{Type: mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)},
+			}
+		} else {
+			definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)
+		}
+		definitionJSONSchema.Required = openAPISchema.Required
 		definitionJSONSchema.Properties, err = recurseNestedSchemas(openAPISpec, openAPISchema.Properties)
 		definitionJSONSchema.Enum = mapEnums(openAPISchema.Enum, openAPISchema.Type)
 
@@ -142,7 +148,16 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 	// Referenced models:
 	if openAPISchema.Ref != "" {
 		var enum []string
-		nestedProperties, definitionJSONSchema.Type, requiredProperties, enum, err = lookupReference(openAPISpec, openAPISchema.Ref)
+		var lookedupReferenceType string
+		nestedProperties, lookedupReferenceType, definitionJSONSchema.Required, enum, err = lookupReference(openAPISpec, openAPISchema.Ref)
+		if allowNullValues {
+			definitionJSONSchema.OneOf = []*jsonSchema.Type{
+				{Type: gojsonschema.TYPE_NULL},
+				{Type: lookedupReferenceType},
+			}
+		} else {
+			definitionJSONSchema.Type = lookedupReferenceType
+		}
 		definitionJSONSchema.Properties, err = recurseNestedSchemas(openAPISpec, nestedProperties)
 		definitionJSONSchema.Enum = mapEnums(enum, []string{definitionJSONSchema.Type})
 	}
@@ -164,7 +179,6 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 			return
 		}
 
-		definitionJSONSchema.Required = requiredProperties
 	}
 
 	return
