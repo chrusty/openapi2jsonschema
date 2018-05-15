@@ -289,36 +289,6 @@ func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
             "additionalProperties": true,
             "type": "object"
         },
-        "contact_schema": {
-            "required": [
-                "email_address"
-            ],
-            "properties": {
-                "email_address": {
-                    "additionalProperties": true,
-                    "type": "string"
-                },
-                "first_name": {
-                    "additionalProperties": true,
-                    "type": "string"
-                },
-                "last_name": {
-                    "additionalProperties": true,
-                    "type": "string"
-                },
-                "phone_number": {
-                    "additionalProperties": true,
-                    "type": "string"
-                },
-                "spam": {
-                    "additionalProperties": true,
-                    "type": "boolean",
-                    "description": "Send this person spam?"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object"
-        },
         "user_id": {
             "additionalProperties": true,
             "type": "integer",
