@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_GenerateJSONSchemas_FlatObject(t *testing.T) {
+func Test_GenerateJSONSchemas_AllowNulls_FlatObject(t *testing.T) {
 
 	var expectedSchema = `{
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -19,21 +19,42 @@ func Test_GenerateJSONSchemas_FlatObject(t *testing.T) {
     "properties": {
         "id": {
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "Some ID",
             "format": "date-time"
         },
         "name": {
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "Some name"
         }
     },
     "additionalProperties": true,
-    "type": "object"
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ]
 }`
 
-	allowNullValues = false
+	allowNullValues = true
 	api, err := openapi2proto.LoadFile("sample/swagger2_flat-object.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
@@ -44,7 +65,7 @@ func Test_GenerateJSONSchemas_FlatObject(t *testing.T) {
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
-func Test_GenerateJSONSchemas_FlatObjectWithEnum(t *testing.T) {
+func Test_GenerateJSONSchemas_AllowNulls_FlatObjectWithEnum(t *testing.T) {
 
 	var expectedSchema = `{
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -60,14 +81,28 @@ func Test_GenerateJSONSchemas_FlatObjectWithEnum(t *testing.T) {
                 "b",
                 "c"
             ],
-            "type": "string"
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ]
         }
     },
     "additionalProperties": true,
-    "type": "object"
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ]
 }`
 
-	allowNullValues = false
+	allowNullValues = true
 	api, err := openapi2proto.LoadFile("sample/swagger2_flat-object-with-enum.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
@@ -78,7 +113,7 @@ func Test_GenerateJSONSchemas_FlatObjectWithEnum(t *testing.T) {
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
-func Test_GenerateJSONSchemas_ObjectWithArrays(t *testing.T) {
+func Test_GenerateJSONSchemas_AllowNulls_ObjectWithArrays(t *testing.T) {
 
 	var expectedSchema = `{
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -96,28 +131,70 @@ func Test_GenerateJSONSchemas_ObjectWithArrays(t *testing.T) {
                 "properties": {
                     "email_address": {
                         "additionalProperties": true,
-                        "type": "string"
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
                     },
                     "first_name": {
                         "additionalProperties": true,
-                        "type": "string"
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
                     },
                     "last_name": {
                         "additionalProperties": true,
-                        "type": "string"
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
                     },
                     "phone_number": {
                         "additionalProperties": true,
-                        "type": "string"
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
                     },
                     "spam": {
                         "additionalProperties": true,
-                        "type": "boolean",
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "boolean"
+                            }
+                        ],
                         "description": "Send this person spam?"
                     }
                 },
                 "additionalProperties": true,
-                "type": "object"
+                "oneOf": [
+                    {
+                        "type": "null"
+                    },
+                    {
+                        "type": "object"
+                    }
+                ]
             },
             "additionalProperties": true
         },
@@ -129,41 +206,90 @@ func Test_GenerateJSONSchemas_ObjectWithArrays(t *testing.T) {
                 "properties": {
                     "description": {
                         "additionalProperties": true,
-                        "type": "string"
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
                     },
                     "id": {
                         "additionalProperties": true,
-                        "type": "integer"
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ]
                     }
                 },
                 "additionalProperties": true,
-                "type": "object"
+                "oneOf": [
+                    {
+                        "type": "null"
+                    },
+                    {
+                        "type": "object"
+                    }
+                ]
             },
             "additionalProperties": true
         },
         "group_id": {
             "additionalProperties": true,
-            "type": "integer",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "integer"
+                }
+            ],
             "description": "Some ID"
         },
         "group_name": {
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "Some name"
         },
         "remarks": {
             "items": {
                 "additionalProperties": true,
-                "type": "string"
+                "oneOf": [
+                    {
+                        "type": "null"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
             },
             "additionalProperties": true
         }
     },
     "additionalProperties": true,
-    "type": "object"
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ]
 }`
 
-	allowNullValues = false
+	allowNullValues = true
 	api, err := openapi2proto.LoadFile("sample/swagger2_array-of-referenced-object.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
@@ -174,7 +300,7 @@ func Test_GenerateJSONSchemas_ObjectWithArrays(t *testing.T) {
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
-func Test_GenerateJSONSchemas_ObjectWithPattern(t *testing.T) {
+func Test_GenerateJSONSchemas_AllowNulls_ObjectWithPattern(t *testing.T) {
 
 	var expectedSchema = `{
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -185,32 +311,67 @@ func Test_GenerateJSONSchemas_ObjectWithPattern(t *testing.T) {
     "properties": {
         "id": {
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "Some ID"
         },
         "locale": {
             "pattern": "^[a-z]{2}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}))?$",
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "BCP 47 locale string"
         },
         "name": {
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "Some name"
         },
         "phone_number": {
             "pattern": "^[\\d|\\+|\\(]+[\\)|\\d|\\s|-]*[\\d]$",
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "Phone number"
         }
     },
     "additionalProperties": true,
-    "type": "object"
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ]
 }`
 
-	allowNullValues = false
+	allowNullValues = true
 	api, err := openapi2proto.LoadFile("sample/swagger2_object-with-pattern.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
@@ -221,7 +382,7 @@ func Test_GenerateJSONSchemas_ObjectWithPattern(t *testing.T) {
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
-func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
+func Test_GenerateJSONSchemas_AllowNulls_ReferencedObject(t *testing.T) {
 
 	var expectedSchema = `{
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -231,37 +392,15 @@ func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
     ],
     "properties": {
         "contact_additional_props_map": {
-            "additionalProperties": {
-                "required": [
-                    "email_address"
-                ],
-                "properties": {
-                    "email_address": {
-                        "additionalProperties": true,
-                        "type": "string"
-                    },
-                    "first_name": {
-                        "additionalProperties": true,
-                        "type": "string"
-                    },
-                    "last_name": {
-                        "additionalProperties": true,
-                        "type": "string"
-                    },
-                    "phone_number": {
-                        "additionalProperties": true,
-                        "type": "string"
-                    },
-                    "spam": {
-                        "additionalProperties": true,
-                        "type": "boolean",
-                        "description": "Send this person spam?"
-                    }
+            "additionalProperties": true,
+            "oneOf": [
+                {
+                    "type": "null"
                 },
-                "additionalProperties": true,
-                "type": "object"
-            },
-            "type": "object"
+                {
+                    "type": "object"
+                }
+            ]
         },
         "contact_ref": {
             "required": [
@@ -270,45 +409,108 @@ func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
             "properties": {
                 "email_address": {
                     "additionalProperties": true,
-                    "type": "string"
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
                 },
                 "first_name": {
                     "additionalProperties": true,
-                    "type": "string"
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
                 },
                 "last_name": {
                     "additionalProperties": true,
-                    "type": "string"
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
                 },
                 "phone_number": {
                     "additionalProperties": true,
-                    "type": "string"
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
                 },
                 "spam": {
                     "additionalProperties": true,
-                    "type": "boolean",
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "boolean"
+                        }
+                    ],
                     "description": "Send this person spam?"
                 }
             },
             "additionalProperties": true,
-            "type": "object"
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "object"
+                }
+            ]
         },
         "user_id": {
             "additionalProperties": true,
-            "type": "integer",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "integer"
+                }
+            ],
             "description": "Some ID"
         },
         "user_name": {
             "additionalProperties": true,
-            "type": "string",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ],
             "description": "Some name"
         }
     },
     "additionalProperties": true,
-    "type": "object"
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ]
 }`
 
-	allowNullValues = false
+	allowNullValues = true
 	api, err := openapi2proto.LoadFile("sample/swagger2_referenced-object.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
@@ -319,7 +521,7 @@ func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
 	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
-func Test_GenerateJSONSchemas_NumberWithMinMax(t *testing.T) {
+func Test_GenerateJSONSchemas_AllowNulls_NumberWithMinMax(t *testing.T) {
 
 	var expectedSchema = `{
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -331,17 +533,31 @@ func Test_GenerateJSONSchemas_NumberWithMinMax(t *testing.T) {
             "maximum": 90,
             "minimum": -90,
             "additionalProperties": true,
-            "type": "number",
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "number"
+                }
+            ],
             "description": "The latitude in degrees. It must be in the range [-90.0, +90.0]",
             "format": "double"
         }
     },
     "additionalProperties": true,
-    "type": "object",
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ],
     "description": "Specifies a geographic location in terms of its Latitude and Longitude"
 }`
 
-	allowNullValues = false
+	allowNullValues = true
 	api, err := openapi2proto.LoadFile("sample/swagger2_flat-object-with-number-options.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
