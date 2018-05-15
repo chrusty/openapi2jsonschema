@@ -21,10 +21,6 @@ definitions:
         example: 'Prawn'
       contact_ref:
         $ref: '#/definitions/ReferencedObject'
-      contact_schema:
-        type: object
-        schema:
-          $ref: '#/definitions/ReferencedObject'
       contact_additional_props_map:
         type: object
         additionalProperties:

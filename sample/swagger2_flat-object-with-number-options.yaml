@@ -5,7 +5,7 @@ info:
 
 definitions:
 
-  LatLong:
+  FlatObjectWithNumberOptions:
     type: object
     description: Specifies a geographic location in terms of its Latitude and Longitude
     required:
