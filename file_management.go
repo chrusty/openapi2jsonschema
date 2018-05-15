@@ -13,7 +13,7 @@ func deriveSpecPathFileName() string {
 }
 
 func generateFileName(outputFileNameWithoutExtention string) string {
-	return fmt.Sprintf("%s/%s.%s", outPath, outputFileNameWithoutExtention, JSONSCHEMA_FILE_EXTENTION)
+	return fmt.Sprintf("%s/%s.%s", outPath, outputFileNameWithoutExtention, jsonschemaFileExtention)
 }
 
 func writeToFile(fileName string, fileData []byte) error {
@@ -21,14 +21,14 @@ func writeToFile(fileName string, fileData []byte) error {
 	// Open output file:
 	outputFile, err := os.Create(fileName)
 	if err != nil {
-		logWithLevel(LOG_FATAL, "Can't open output file (%v): %v", fileName, err)
+		logWithLevel(logFatal, "Can't open output file (%v): %v", fileName, err)
 		return err
 	}
 	defer outputFile.Close()
 
 	// Write to the file:
 	if _, err := outputFile.Write(fileData); err != nil {
-		logWithLevel(LOG_FATAL, "Can't write to file (%v): %v", fileName, err)
+		logWithLevel(logFatal, "Can't write to file (%v): %v", fileName, err)
 		return err
 	}
 
@@ -48,7 +48,7 @@ func writeAllJSONSchemasToFile(generatedJSONSchemas []GeneratedJSONSchema) error
 			return err
 		}
 
-		logWithLevel(LOG_DEBUG, "Wrote schema-definition (%s) to a file: %v", generatedJSONSchema.Name, jsonSchemaFileName)
+		logWithLevel(logDebug, "Wrote schema-definition (%s) to a file: %v", generatedJSONSchema.Name, jsonSchemaFileName)
 	}
 
 	return nil
@@ -60,7 +60,7 @@ func writeAllJSONSchemasToGoConstants(generatedJSONSchemas []GeneratedJSONSchema
 
 	// Prepare a filename:
 	specFileName := deriveSpecPathFileName()
-	goConstantsFilename := fmt.Sprintf("%v/%v_%v.go", outPath, GO_CONSTANTS_FILENAME, specFileName)
+	goConstantsFilename := fmt.Sprintf("%v/%v_%v.go", outPath, goConstantsFilename, specFileName)
 
 	// Go through the JSONSchemas and write each one to a file:
 	for _, generatedJSONSchema := range generatedJSONSchemas {
@@ -73,7 +73,7 @@ func writeAllJSONSchemasToGoConstants(generatedJSONSchemas []GeneratedJSONSchema
 		return err
 	}
 
-	logWithLevel(LOG_DEBUG, "Wrote GoLang constants to a file: %v", goConstantsFilename)
+	logWithLevel(logDebug, "Wrote GoLang constants to a file: %v", goConstantsFilename)
 
 	return nil
 }

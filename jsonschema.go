@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	openapi2proto "github.com/NYTimes/openapi2proto"
+	openapi2proto "github.com/NYTimes/openapi2proto/openapi"
 	jsonschema "github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
@@ -18,18 +18,43 @@ type GeneratedJSONSchema struct {
 	Bytes []byte
 }
 
-func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.APIDefinition) ([]GeneratedJSONSchema, error) {
+// GenerateJSONSchemas takes an OpenAPI "Spec":
+// * converts each definition into JSONSchemas
+// * writes them to files
+// * optionally writes GoLang constants for convenience
+func GenerateJSONSchemas(api *openapi2proto.Spec) (err error) {
+
+	// Store the output in here:
+	generatedJSONSchemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
+	if err != nil {
+		return errors.Wrap(err, "could not map openapi definitions to jsonschema")
+	}
+
+	// Output the API name:
+	logWithLevel(logDebug, "API: %v (%v)", api.Info.Title, api.Info.Description)
+
+	// Generate a GoConstants file (if we've been asked to):
+	if goConstants {
+		writeAllJSONSchemasToGoConstants(generatedJSONSchemas)
+	}
+
+	// Also write them all out to jsonschema files:
+	return writeAllJSONSchemasToFile(generatedJSONSchemas)
+}
+
+// MapOpenAPIDefinitionsToJSONSchema converts an OpenAPI "Spec" into a JSONSchema:
+func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.Spec) ([]GeneratedJSONSchema, error) {
 	var generatedJSONSchemas []GeneratedJSONSchema
 
 	// if we have no definitions then copy them from parameters:
 	if api.Definitions == nil {
-		logWithLevel(LOG_DEBUG, "No definitions found - copying from parameters...")
+		logWithLevel(logDebug, "No definitions found - copying from parameters...")
 		api.Definitions = map[string]*openapi2proto.Items{}
 	}
 
 	// jam all the parameters into the normal 'definitions' for easier reference.
 	for paramName, param := range api.Parameters {
-		logWithLevel(LOG_DEBUG, "Found a parameter: %s", paramName)
+		logWithLevel(logDebug, "Found a parameter: %s", paramName)
 		api.Definitions[paramName] = param
 	}
 
@@ -41,7 +66,7 @@ func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.APIDefinition) ([]Gene
 		var err error
 
 		// Report:
-		logWithLevel(LOG_INFO, "Processing schema-definition: %s", definitionName)
+		logWithLevel(logInfo, "Processing schema-definition: %s", definitionName)
 
 		// Derive a jsonschema:
 		definitionJSONSchema, err = convertItems(api, definitionName, definition)
@@ -69,29 +94,8 @@ func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.APIDefinition) ([]Gene
 
 }
 
-// GenerateJSONSchemas takes an openAPI *APIDefinition and converts it into JSONSchemas:
-func GenerateJSONSchemas(api *openapi2proto.APIDefinition) (err error) {
-
-	// Store the output in here:
-	generatedJSONSchemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
-	if err != nil {
-		return errors.Wrap(err, "could not map openapi definitions to jsonschema")
-	}
-
-	// Output the API name:
-	logWithLevel(LOG_DEBUG, "API: %v (%v)", api.Info.Title, api.Info.Description)
-
-	// Generate a GoConstants file (if we've been asked to):
-	if goConstants {
-		writeAllJSONSchemasToGoConstants(generatedJSONSchemas)
-	}
-
-	// Also write them all out to jsonschema files:
-	return writeAllJSONSchemasToFile(generatedJSONSchemas)
-}
-
 // Converts an OpenAPI "Items" into a JSON-Schema:
-func convertItems(api *openapi2proto.APIDefinition, itemName string, items *openapi2proto.Items) (definitionJSONSchema jsonschema.Type, err error) {
+func convertItems(api *openapi2proto.Spec, itemName string, items *openapi2proto.Items) (definitionJSONSchema jsonschema.Type, err error) {
 	var nestedProperties map[string]*openapi2proto.Items
 	var requiredProperties interface{}
 
@@ -201,7 +205,7 @@ func mapOpenAPITypeToJSONSchemaType(openAPIType interface{}) string {
 	case nil, "":
 		return gojsonschema.TYPE_NULL
 	default:
-		logWithLevel(LOG_WARN, "Can't determine JSONSchema type (%v)", openAPIType)
+		logWithLevel(logWarn, "Can't determine JSONSchema type (%v)", openAPIType)
 		return gojsonschema.TYPE_NULL
 	}
 }
@@ -220,7 +224,7 @@ func splitReferencePath(ref string) (string, string, error) {
 }
 
 // Look up a reference and return its schema and metadata:
-func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, enum []string, err error) {
+func lookupReference(api *openapi2proto.Spec, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, enum []string, err error) {
 
 	// Break up the path:
 	_, reference, err := splitReferencePath(referencePath)
@@ -229,7 +233,7 @@ func lookupReference(api *openapi2proto.APIDefinition, referencePath string) (ne
 	}
 
 	// Look up the referenced model:
-	logWithLevel(LOG_DEBUG, "Found a referenced model (%s)", reference)
+	logWithLevel(logDebug, "Found a referenced model (%s)", reference)
 	referencedDefinition, ok := api.Definitions[reference]
 	if !ok {
 		err = fmt.Errorf("Unable to find a referenced model (%s)", reference)
@@ -253,22 +257,22 @@ func buildRequiredPropertiesList(requiredPropertiesInterface interface{}) (requi
 
 		// Iterate through the required-properties list, and add them to the JSONSchema:
 		for _, requiredProperty := range requiredPropertiesList {
-			logWithLevel(LOG_DEBUG, "Adding required property (%s)", requiredProperty)
+			logWithLevel(logDebug, "Adding required property (%s)", requiredProperty)
 			requiredProperties = append(requiredProperties, requiredProperty.(string))
 		}
 	} else {
-		logWithLevel(LOG_DEBUG, "Failed to type-assert required-properties list")
+		logWithLevel(logDebug, "Failed to type-assert required-properties list")
 	}
 
 	return
 }
 
-func recurseNestedProperties(api *openapi2proto.APIDefinition, nestedProperties map[string]*openapi2proto.Items) (properties map[string]*jsonschema.Type, err error) {
+func recurseNestedProperties(api *openapi2proto.Spec, nestedProperties map[string]*openapi2proto.Items) (properties map[string]*jsonschema.Type, err error) {
 	properties = make(map[string]*jsonschema.Type)
 
 	// Recurse nested items:
 	for nestedItemsName, nestedItems := range nestedProperties {
-		logWithLevel(LOG_DEBUG, "Processing nested-items: %s", nestedItemsName)
+		logWithLevel(logDebug, "Processing nested-items: %s", nestedItemsName)
 		recurseddefinitionJSONSchema, err := convertItems(api, nestedItemsName, nestedItems)
 		if err != nil {
 			return properties, fmt.Errorf("Failed to convert items %s: %v", nestedItemsName, err)

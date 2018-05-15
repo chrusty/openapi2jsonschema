@@ -1,12 +1,12 @@
-hash: 06a297153dc2354720ed7850f60fcfa9ea1ec29265944d39392043dc8cb91f4b
-updated: 2018-05-11T10:16:34.072615+01:00
+hash: 88c3b492a35ebd200b01f58cde12a7be0c4b6934b16ae5a450c2eb34af69adba
+updated: 2018-05-15T08:26:45.034125+01:00
 imports:
 - name: github.com/alecthomas/jsonschema
   version: f2c93856175a7dd6abe88c5c3900b67ad054adcc
 - name: github.com/dolmen-go/jsonptr
   version: 1c352ec474fc378d7dfa4115433ef13d0276b526
 - name: github.com/NYTimes/openapi2proto
-  version: 5455d470025633b0a6461730122c37db4e140e1d
+  version: e9cfa973f7cdc4b2d80c79cb605a86eba14dcbcc
   subpackages:
   - compiler
   - internal/option
@@ -29,10 +29,10 @@ imports:
   version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  version: 782f4967f2dc4564575ca782fe2d04090b5faca8
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
-  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib

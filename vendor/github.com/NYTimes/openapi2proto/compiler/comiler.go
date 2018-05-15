@@ -581,7 +581,7 @@ func (c *compileCtx) compileSchema(name string, s *openapi.Schema) (protobuf.Typ
 		}
 		c.addType(m)
 		return m, nil
-	case s.Type.Contains("string") || s.Type.Contains("integer") || s.Type.Contains("number"):
+	case s.Type.Contains("string") || s.Type.Contains("integer"):
 		if len(s.Enum) > 0 {
 			name = strings.TrimSuffix(name, "Message")
 			t, err := c.compileEnum(name, s.Enum)
@@ -708,7 +708,7 @@ func (c *compileCtx) applyBuiltinFormat(t protobuf.Type, f string) (rt protobuf.
 			return protobuf.DoubleType
 		case "int64", "long":
 			return protobuf.Int64Type
-		case "integer", "int32":
+		case "integer":
 			return protobuf.Int32Type
 		default:
 			return protobuf.FloatType
