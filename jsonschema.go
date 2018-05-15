@@ -97,7 +97,7 @@ func MapOpenAPIDefinitionsToJSONSchema(openAPISpec *openAPI.Spec) ([]GeneratedJS
 // Converts an OpenAPI "Items" into a JSON-Schema:
 func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *openAPI.Schema) (definitionJSONSchema jsonSchema.Type, err error) {
 	var nestedProperties map[string]*openAPI.Schema
-	var requiredProperties interface{}
+	var requiredProperties []string
 
 	// Prepare a new jsonschema:
 	definitionJSONSchema = jsonSchema.Type{
@@ -165,7 +165,7 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 			return
 		}
 
-		definitionJSONSchema.Required = buildRequiredPropertiesList(requiredProperties)
+		definitionJSONSchema.Required = requiredProperties
 	}
 
 	return
@@ -232,7 +232,7 @@ func splitReferencePath(ref string) (string, string, error) {
 }
 
 // Look up a reference and return its schema and metadata:
-func lookupReference(openAPISpec *openAPI.Spec, referencePath string) (nestedProperties map[string]*openAPI.Schema, definitionJSONSchemaType string, requiredProperties interface{}, enum []string, err error) {
+func lookupReference(openAPISpec *openAPI.Spec, referencePath string) (nestedProperties map[string]*openAPI.Schema, definitionJSONSchemaType string, requiredProperties []string, enum []string, err error) {
 
 	// Break up the path:
 	_, reference, err := splitReferencePath(referencePath)
@@ -257,24 +257,7 @@ func lookupReference(openAPISpec *openAPI.Spec, referencePath string) (nestedPro
 	return
 }
 
-// Build a list of required-properties:
-func buildRequiredPropertiesList(requiredPropertiesInterface interface{}) (requiredProperties []string) {
-
-	// Ugly type-assertion to get the list of required properties:
-	if requiredPropertiesList, ok := requiredPropertiesInterface.([]interface{}); ok {
-
-		// Iterate through the required-properties list, and add them to the JSONSchema:
-		for _, requiredProperty := range requiredPropertiesList {
-			logWithLevel(logDebug, "Adding required property (%s)", requiredProperty)
-			requiredProperties = append(requiredProperties, requiredProperty.(string))
-		}
-	} else {
-		logWithLevel(logDebug, "Failed to type-assert required-properties list")
-	}
-
-	return
-}
-
+// recurseNestedSchemas converts nested openAPISchemas:
 func recurseNestedSchemas(openAPISpec *openAPI.Spec, nestedSchemas map[string]*openAPI.Schema) (properties map[string]*jsonSchema.Type, err error) {
 	properties = make(map[string]*jsonSchema.Type)
 
