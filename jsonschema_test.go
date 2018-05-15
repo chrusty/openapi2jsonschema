@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	openapi2proto "github.com/NYTimes/openapi2proto"
+	openapi2proto "github.com/NYTimes/openapi2proto/openapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func Test_GenerateJSONSchemas_FlatObject(t *testing.T) {
     "type": "object"
 }`
 
-	api, err := openapi2proto.LoadDefinition("sample/swagger2_flat-object.yaml")
+	api, err := openapi2proto.LoadFile("sample/swagger2_flat-object.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
 
@@ -66,7 +66,7 @@ func Test_GenerateJSONSchemas_FlatObjectWithEnum(t *testing.T) {
     "type": "object"
 }`
 
-	api, err := openapi2proto.LoadDefinition("sample/swagger2_flat-object-with-enum.yaml")
+	api, err := openapi2proto.LoadFile("sample/swagger2_flat-object-with-enum.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
 
@@ -161,7 +161,7 @@ func Test_GenerateJSONSchemas_ObjectWithArrays(t *testing.T) {
     "type": "object"
 }`
 
-	api, err := openapi2proto.LoadDefinition("sample/swagger2_array-of-referenced-object.yaml")
+	api, err := openapi2proto.LoadFile("sample/swagger2_array-of-referenced-object.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
 
@@ -207,7 +207,7 @@ func Test_GenerateJSONSchemas_ObjectWithPattern(t *testing.T) {
     "type": "object"
 }`
 
-	api, err := openapi2proto.LoadDefinition("sample/swagger2_object-with-pattern.yaml")
+	api, err := openapi2proto.LoadFile("sample/swagger2_object-with-pattern.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
 
@@ -334,7 +334,7 @@ func Test_GenerateJSONSchemas_ReferencedObject(t *testing.T) {
     "type": "object"
 }`
 
-	api, err := openapi2proto.LoadDefinition("sample/swagger2_referenced-object.yaml")
+	api, err := openapi2proto.LoadFile("sample/swagger2_referenced-object.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
 
@@ -366,7 +366,7 @@ func Test_GenerateJSONSchemas_NumberWithMinMax(t *testing.T) {
     "description": "Specifies a geographic location in terms of its Latitude and Longitude"
 }`
 
-	api, err := openapi2proto.LoadDefinition("sample/swagger2_flat-object-with-number-options.yaml")
+	api, err := openapi2proto.LoadFile("sample/swagger2_flat-object-with-number-options.yaml")
 	require.NoError(t, err)
 	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
 

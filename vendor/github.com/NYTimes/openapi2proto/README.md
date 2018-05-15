@@ -13,8 +13,9 @@ go get -u github.com/NYTimes/openapi2proto/cmd/openapi2proto
 
 There are 3 CLI flags for using the tool:
 * `-spec` to point to the appropriate OpenAPI spec file
-* `-options` to include google.api.http options for [grpc-gateway](https://github.com/gengo/grpc-gateway) users. This is disabled by default.
+* `-annotate` to include (google.api.http options) for [grpc-gateway](https://github.com/gengo/grpc-gateway) users. This is disabled by default.
 * `-out` to have the output written to a file rather than `Stdout. Defaults to `Stdout` if this is not specified`
+* `-indent` to override the default indentation for Protobuf specs of 4 spaces.
 
 ## Protobuf Tags
 * To allow for more control over how your protobuf schema evolves, all parameters and property definitions will accept an optional extension parameter, `x-proto-tag`, that will overide the generated tag with the value supplied.
@@ -96,78 +97,123 @@ Will generate:
 * Fields with that have more than 1 type and the second type is not "null" will be replaced with the `google.protobuf.Any` type.
 * Endpoints that respond with an array will be wrapped with a message type that has a single field, 'items', that contains the array.
 * Only "200" and "201" responses are inspected for determining the expected return value for RPC endpoints.
-* To prevent enum collisions and to match the [protobuf style guide](https://developers.google.com/protocol-buffers/docs/style#enums), enum values will be `CAPITALS_WITH_UNDERSCORES` and nested enum values and will have their parent types prepended.
+* To prevent enum collisions and to match the [protobuf style guide](https://developers.google.com/protocol-buffers/docs/style#enums), enum values will be `CAPITALS_WITH_UNDERSCORES` and nested enum values will have their parent types prepended to their names.
 
 
 ## Example
 
 ```
-╰─➤  openapi2proto -spec swagger.yaml -options
+╰─➤  openapi2proto -spec swagger.yaml -annotate
 syntax = "proto3";
-
-import "google/protobuf/empty.proto";
-
-import "google/api/annotations.proto";
 
 package swaggerpetstore;
 
-message GetPetsRequest {
-    // maximum number of results to return
-    int32 limit = 1;
-    // tags to filter by
-    repeated string tags = 2;
-}
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
 
-message PostPetsRequest {
+message AddPetRequest {
+    message PetMessage {
+        int64 id = 1;
+        string name = 2;
+        string tag = 3;
+    }
+
     // Pet to add to the store
-    Pet pet = 1;
+    PetMessage pet = 1;
 }
 
-message GetPetsIdRequest {
-    // ID of pet to fetch
-    int64 id = 1;
-}
-
-message DeletePetsIdRequest {
-    // ID of pet to delete
-    int64 id = 1;
-}
-
-message Pet {
+message AddPetResponse {
     int64 id = 1;
     string name = 2;
     string tag = 3;
 }
 
-message Pets {
-    repeated Pet pets = 1;
+message DeletePetRequest {
+    // ID of pet to delete
+    int64 id = 1;
+}
+
+message FindPetByIdRequest {
+    // ID of pet to fetch
+    int64 id = 1;
+}
+
+message FindPetByIdResponse {
+    int64 id = 1;
+    string name = 2;
+    string tag = 3;
+}
+
+message FindPetsByIdsRequest {
+    repeated string ids = 1;
+
+    // maximum number of results to return
+    int32 limit = 2;
+}
+
+message FindPetsByIdsResponse {
+    message PetsMessage {
+        int64 id = 1;
+        string name = 2;
+        string tag = 3;
+    }
+
+    repeated PetsMessage pets = 1;
+}
+
+message FindPetsRequest {
+    // maximum number of results to return
+    int32 limit = 1;
+
+    // tags to filter by
+    repeated string tags = 2;
+}
+
+message FindPetsResponse {
+    message PetsMessage {
+        int64 id = 1;
+        string name = 2;
+        string tag = 3;
+    }
+
+    repeated PetsMessage pets = 1;
 }
 
 service SwaggerPetstoreService {
-    // Returns all pets from the system that the user has access to
-    rpc GetPets(GetPetsRequest) returns (Pets) {
-      option (google.api.http) = {
-        get: "/api/pets"
-      };
-    }
     // Creates a new pet in the store.  Duplicates are allowed
-    rpc PostPets(PostPetsRequest) returns (Pet) {
-      option (google.api.http) = {
-        post: "/api/pets"
-        body: "pet"
-      };
+    rpc AddPet(AddPetRequest) returns (AddPetResponse) {
+        option (google.api.http) = {
+            post: "/api/pets"
+            body: "pet"
+        };
     }
-    // Returns a user based on a single ID, if the user does not have access to the pet
-    rpc GetPetsId(GetPetsIdRequest) returns (Pet) {
-      option (google.api.http) = {
-        get: "/api/pets/{id}"
-      };
-    }
+
     // deletes a single pet based on the ID supplied
-    rpc DeletePetsId(DeletePetsIdRequest) returns (google.protobuf.Empty) {
-      option (google.api.http) = {
-        delete: "/api/pets/{id}"
-      };
+    rpc DeletePet(DeletePetRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/pets/{id}"
+        };
+    }
+
+    // Returns a user based on a single ID, if the user does not have access to the pet
+    rpc FindPetById(FindPetByIdRequest) returns (FindPetByIdResponse) {
+        option (google.api.http) = {
+            get: "/api/pets/{id}"
+        };
+    }
+
+    // Returns all pets from the system that the user has access to
+    rpc FindPets(FindPetsRequest) returns (FindPetsResponse) {
+        option (google.api.http) = {
+            get: "/api/pets"
+        };
+    }
+
+    // Returns all pets from the system that the user has access to
+    rpc FindPetsByIds(FindPetsByIdsRequest) returns (FindPetsByIdsResponse) {
+        option (google.api.http) = {
+            get: "/api/pets/{ids}"
+        };
     }
 }
 ```

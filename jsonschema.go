@@ -43,23 +43,23 @@ func GenerateJSONSchemas(api *openapi2proto.Spec) (err error) {
 }
 
 // MapOpenAPIDefinitionsToJSONSchema converts an OpenAPI "Spec" into a JSONSchema:
-func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.Spec) ([]GeneratedJSONSchema, error) {
+func MapOpenAPIDefinitionsToJSONSchema(openapi2protoSpec *openapi2proto.Spec) ([]GeneratedJSONSchema, error) {
 	var generatedJSONSchemas []GeneratedJSONSchema
 
 	// if we have no definitions then copy them from parameters:
-	if api.Definitions == nil {
+	if openapi2protoSpec.Definitions == nil {
 		logWithLevel(logDebug, "No definitions found - copying from parameters...")
-		api.Definitions = map[string]*openapi2proto.Items{}
+		openapi2protoSpec.Definitions = map[string]*openapi2proto.Schema{}
 	}
 
 	// jam all the parameters into the normal 'definitions' for easier reference.
-	for paramName, param := range api.Parameters {
+	for paramName, param := range openapi2protoSpec.Parameters {
 		logWithLevel(logDebug, "Found a parameter: %s", paramName)
-		api.Definitions[paramName] = param
+		openapi2protoSpec.Parameters[paramName] = param
 	}
 
 	// Iterate through the definitions, creating JSONSchemas for each:
-	for definitionName, definition := range api.Definitions {
+	for definitionName, definition := range openapi2protoSpec.Definitions {
 
 		var definitionJSONSchema jsonschema.Type
 		var generatedJSONSchema GeneratedJSONSchema
@@ -69,7 +69,7 @@ func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.Spec) ([]GeneratedJSON
 		logWithLevel(logInfo, "Processing schema-definition: %s", definitionName)
 
 		// Derive a jsonschema:
-		definitionJSONSchema, err = convertItems(api, definitionName, definition)
+		definitionJSONSchema, err = convertItems(openapi2protoSpec, definitionName, definition)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not derive a json schema")
 
@@ -95,67 +95,66 @@ func MapOpenAPIDefinitionsToJSONSchema(api *openapi2proto.Spec) ([]GeneratedJSON
 }
 
 // Converts an OpenAPI "Items" into a JSON-Schema:
-func convertItems(api *openapi2proto.Spec, itemName string, items *openapi2proto.Items) (definitionJSONSchema jsonschema.Type, err error) {
-	var nestedProperties map[string]*openapi2proto.Items
+func convertItems(openapi2protoSpec *openapi2proto.Spec, itemName string, openapi2protoSchema *openapi2proto.Schema) (definitionJSONSchema jsonschema.Type, err error) {
+	var nestedProperties map[string]*openapi2proto.Schema
 	var requiredProperties interface{}
 
 	// Prepare a new jsonschema:
 	definitionJSONSchema = jsonschema.Type{
 		AdditionalProperties: generateAdditionalProperties(blockAdditionalProperties),
-		Description:          strings.Replace(items.Description, "`", "'", -1),
-		MaxLength:            items.MaxLength,
-		MinLength:            items.MinLength,
-		Pattern:              items.Pattern,
+		Description:          strings.Replace(openapi2protoSchema.Description, "`", "'", -1),
+		MaxLength:            openapi2protoSchema.MaxLength,
+		MinLength:            openapi2protoSchema.MinLength,
+		Pattern:              openapi2protoSchema.Pattern,
 		Properties:           make(map[string]*jsonschema.Type),
-		Title:                items.Name,
-		Minimum:              items.Minimum,
-		Maximum:              items.Maximum,
+		Title:                openapi2protoSchema.ProtoName,
+		Minimum:              openapi2protoSchema.Minimum,
+		Maximum:              openapi2protoSchema.Maximum,
 	}
 
 	// Self-contained schemas:
-	if items.Schema != nil {
-		itemsMap, recurseError := recurseNestedProperties(api, map[string]*openapi2proto.Items{"schema": items.Schema})
+	if openapi2protoSchema.Items != nil {
+		itemsMap, recurseError := recurseNestedSchemas(openapi2protoSpec, map[string]*openapi2proto.Schema{"items": openapi2protoSchema.Items})
 		err = recurseError
-		definitionJSONSchema = *itemsMap["schema"]
+		definitionJSONSchema = *itemsMap["items"]
 		return
 	}
 
 	// Arrays of self-defined parameters:
-	if items.Ref == "" && items.Type == gojsonschema.TYPE_ARRAY {
-		itemsMap, recurseError := recurseNestedProperties(api, map[string]*openapi2proto.Items{"items": items.Items})
+	if openapi2protoSchema.Ref == "" && openapi2protoSchema.Type.Contains(gojsonschema.TYPE_ARRAY) {
+		itemsMap, recurseError := recurseNestedSchemas(openapi2protoSpec, map[string]*openapi2proto.Schema{"items": openapi2protoSchema.Items})
 		err = recurseError
 		definitionJSONSchema.Items = itemsMap["items"]
 	}
 
 	// Single-instances of self-defined parameters:
-	if items.Ref == "" && items.Type != gojsonschema.TYPE_ARRAY && items.Schema == nil {
-		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(items.Type)
-		requiredProperties = items.Required
-		definitionJSONSchema.Properties, err = recurseNestedProperties(api, items.Model.Properties)
-		definitionJSONSchema.Enum = mapEnums(items.Enum, items.Type)
+	if openapi2protoSchema.Ref == "" && !openapi2protoSchema.Type.Contains(gojsonschema.TYPE_ARRAY) && openapi2protoSchema.Items == nil {
+		definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(openapi2protoSchema.Type)
+		requiredProperties = openapi2protoSchema.Required
+		definitionJSONSchema.Properties, err = recurseNestedSchemas(openapi2protoSpec, openapi2protoSchema.Items.Properties)
+		definitionJSONSchema.Enum = mapEnums(openapi2protoSchema.Enum, openapi2protoSchema.Type)
 
-		if items.Format != nil {
-			definitionJSONSchema.Format = items.Format.(string)
+		if openapi2protoSchema.Format != "" {
+			definitionJSONSchema.Format = openapi2protoSchema.Format
 		}
 	}
 
 	// Referenced models:
-	if items.Ref != "" {
+	if openapi2protoSchema.Ref != "" {
 		var enum []string
-		nestedProperties, definitionJSONSchema.Type, requiredProperties, enum, err = lookupReference(api, items.Ref)
-		definitionJSONSchema.Properties, err = recurseNestedProperties(api, nestedProperties)
+		nestedProperties, definitionJSONSchema.Type, requiredProperties, enum, err = lookupReference(openapi2protoSpec, openapi2protoSchema.Ref)
+		definitionJSONSchema.Properties, err = recurseNestedSchemas(openapi2protoSpec, nestedProperties)
 		definitionJSONSchema.Enum = mapEnums(enum, definitionJSONSchema.Type)
 	}
 
 	// Maintain a list of required items:
 	if definitionJSONSchema.Type == gojsonschema.TYPE_OBJECT {
 
-		// if we have any nested items in the object then we should process
-		// them
-		if item := items.AdditionalProperties; item != nil {
+		// if we have any nested items in the object then we should process them
+		if additionalPropertiesSchema := openapi2protoSchema.AdditionalProperties; additionalPropertiesSchema != nil {
 			var schema jsonschema.Type
 			var raw json.RawMessage
-			schema, err = convertItems(api, item.Name, item)
+			schema, err = convertItems(openapi2protoSpec, additionalPropertiesSchema.ProtoName, additionalPropertiesSchema)
 
 			// Annoyingly since "additionalProperties" can actually be a
 			// boolean or an object we have to marshal the resulting schema
@@ -224,7 +223,7 @@ func splitReferencePath(ref string) (string, string, error) {
 }
 
 // Look up a reference and return its schema and metadata:
-func lookupReference(api *openapi2proto.Spec, referencePath string) (nestedProperties map[string]*openapi2proto.Items, definitionJSONSchemaType string, requiredProperties interface{}, enum []string, err error) {
+func lookupReference(api *openapi2proto.Spec, referencePath string) (nestedProperties map[string]*openapi2proto.Schema, definitionJSONSchemaType string, requiredProperties interface{}, enum []string, err error) {
 
 	// Break up the path:
 	_, reference, err := splitReferencePath(referencePath)
@@ -241,7 +240,7 @@ func lookupReference(api *openapi2proto.Spec, referencePath string) (nestedPrope
 	}
 
 	// Use the model's items, type, and required-properties:
-	nestedProperties = referencedDefinition.Model.Properties
+	nestedProperties = referencedDefinition.Items.Properties
 	definitionJSONSchemaType = mapOpenAPITypeToJSONSchemaType(referencedDefinition.Type)
 	requiredProperties = referencedDefinition.Required
 	enum = referencedDefinition.Enum
@@ -267,17 +266,17 @@ func buildRequiredPropertiesList(requiredPropertiesInterface interface{}) (requi
 	return
 }
 
-func recurseNestedProperties(api *openapi2proto.Spec, nestedProperties map[string]*openapi2proto.Items) (properties map[string]*jsonschema.Type, err error) {
+func recurseNestedSchemas(openapi2protoSpec *openapi2proto.Spec, nestedSchemas map[string]*openapi2proto.Schema) (properties map[string]*jsonschema.Type, err error) {
 	properties = make(map[string]*jsonschema.Type)
 
 	// Recurse nested items:
-	for nestedItemsName, nestedItems := range nestedProperties {
-		logWithLevel(logDebug, "Processing nested-items: %s", nestedItemsName)
-		recurseddefinitionJSONSchema, err := convertItems(api, nestedItemsName, nestedItems)
+	for nestedSchemaName, nestedSchema := range nestedSchemas {
+		logWithLevel(logDebug, "Processing nested-items: %s", nestedSchemaName)
+		recursedJSONSchema, err := convertItems(openapi2protoSpec, nestedSchemaName, nestedSchema)
 		if err != nil {
-			return properties, fmt.Errorf("Failed to convert items %s: %v", nestedItemsName, err)
+			return properties, fmt.Errorf("Failed to convert items %s: %v", nestedSchemaName, err)
 		}
-		properties[nestedItemsName] = &recurseddefinitionJSONSchema
+		properties[nestedSchemaName] = &recursedJSONSchema
 	}
 
 	return

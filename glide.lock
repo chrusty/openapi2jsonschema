@@ -1,12 +1,12 @@
-hash: 88c3b492a35ebd200b01f58cde12a7be0c4b6934b16ae5a450c2eb34af69adba
-updated: 2018-05-15T08:26:45.034125+01:00
+hash: 06a297153dc2354720ed7850f60fcfa9ea1ec29265944d39392043dc8cb91f4b
+updated: 2018-05-15T08:49:16.460355+01:00
 imports:
 - name: github.com/alecthomas/jsonschema
   version: f2c93856175a7dd6abe88c5c3900b67ad054adcc
 - name: github.com/dolmen-go/jsonptr
   version: 1c352ec474fc378d7dfa4115433ef13d0276b526
 - name: github.com/NYTimes/openapi2proto
-  version: e9cfa973f7cdc4b2d80c79cb605a86eba14dcbcc
+  version: 5455d470025633b0a6461730122c37db4e140e1d
   subpackages:
   - compiler
   - internal/option
