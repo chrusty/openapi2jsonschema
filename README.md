@@ -3,15 +3,17 @@ Produce JSONSchemas from OpenAPI (Swagger) definitions
 
 ## Usage:
 ```
-Usage of openapi2jsonschema:
+Usage of ./openapi2jsonschema:
+  -allow_null_values
+    	Allow NULL values as well as the defined types?
   -block_additional_properties
-    	Block additional properties
+    	Block additional properties?
   -debug
-    	Log debug messages
+    	Log debug messages?
   -go_constants
-    	Output GoLang constants (in addition to JSONSchemas)
+    	Output GoLang constants (in addition to JSONSchemas)?
   -out string
-    	where to write jsonschema output files to (default "./out")
+    	Where to write jsonschema output files to (default "./out")
   -spec string
-    	location of the swagger spec file (default "../../spec.yaml")
+    	Location of the swagger spec file (default "../../spec.yaml")
 ```
