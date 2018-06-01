@@ -97,7 +97,6 @@ func MapOpenAPIDefinitionsToJSONSchema(openAPISpec *openAPI.Spec) ([]GeneratedJS
 // Converts an OpenAPI "Items" into a JSON-Schema:
 func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *openAPI.Schema) (definitionJSONSchema jsonSchema.Type, err error) {
 	var nestedProperties map[string]*openAPI.Schema
-
 	// Prepare a new jsonschema:
 	definitionJSONSchema = jsonSchema.Type{
 		AdditionalProperties: generateAdditionalProperties(blockAdditionalProperties),
