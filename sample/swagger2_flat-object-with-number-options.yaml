@@ -17,3 +17,7 @@ definitions:
         description: 'The latitude in degrees. It must be in the range [-90.0, +90.0]'
         minimum: -90
         maximum: 90
+      description:
+        type: string
+        minLength: 1
+        maxLength: 10

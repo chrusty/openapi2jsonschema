@@ -62,7 +62,7 @@ func Test_GenerateJSONSchemas_AllowNulls_FlatObject(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
 	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
-	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
 func Test_GenerateJSONSchemas_AllowNulls_FlatObjectWithEnum(t *testing.T) {
@@ -110,7 +110,7 @@ func Test_GenerateJSONSchemas_AllowNulls_FlatObjectWithEnum(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
 	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
-	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
 func Test_GenerateJSONSchemas_AllowNulls_ObjectWithArrays(t *testing.T) {
@@ -297,7 +297,7 @@ func Test_GenerateJSONSchemas_AllowNulls_ObjectWithArrays(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
 	assert.Len(t, schemas, 2, "Unexpected number of schemas returned")
-	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
 func Test_GenerateJSONSchemas_AllowNulls_ObjectWithPattern(t *testing.T) {
@@ -379,7 +379,7 @@ func Test_GenerateJSONSchemas_AllowNulls_ObjectWithPattern(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
 	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
-	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
 func Test_GenerateJSONSchemas_AllowNulls_ReferencedObject(t *testing.T) {
@@ -518,7 +518,7 @@ func Test_GenerateJSONSchemas_AllowNulls_ReferencedObject(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
 	assert.Len(t, schemas, 2, "Unexpected number of schemas returned")
-	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
 
 func Test_GenerateJSONSchemas_AllowNulls_NumberWithMinMax(t *testing.T) {
@@ -529,6 +529,19 @@ func Test_GenerateJSONSchemas_AllowNulls_NumberWithMinMax(t *testing.T) {
         "latitude"
     ],
     "properties": {
+        "description": {
+            "minLength": 1,
+            "maxLength": 10,
+            "additionalProperties": true,
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "string"
+                }
+            ]
+        },
         "latitude": {
             "maximum": 90,
             "minimum": -90,
@@ -565,5 +578,5 @@ func Test_GenerateJSONSchemas_AllowNulls_NumberWithMinMax(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, schemas)
 	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
-	assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
