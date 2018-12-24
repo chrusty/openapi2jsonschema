@@ -580,3 +580,114 @@ func Test_GenerateJSONSchemas_AllowNulls_NumberWithMinMax(t *testing.T) {
 	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
 	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 }
+
+func Test_GenerateJSONSchemas_MapAllowingNullValues(t *testing.T) {
+
+	var expectedSchema = `{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "additionalProperties": {
+        "type": "string"
+    },
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ]
+}`
+
+	allowNullValues = true
+	api, err := openapi2proto.LoadFile("sample/swagger2_with_map.yaml")
+	require.NoError(t, err)
+	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+}
+
+func Test_GenerateJSONSchemas_MapInAReffedObjectAllowingNullValues(t *testing.T) {
+
+	var expectedSchema = `{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"properties": {
+	    "object_with_map": {
+		"additionalProperties": {
+		    "type": "string"
+		},
+		"oneOf": [
+		    {
+			"type": "null"
+		    },
+		    {
+			"type": "object"
+		    }
+		]
+	    }
+	},
+	"additionalProperties": true,
+	"oneOf": [
+	    {
+		"type": "null"
+	    },
+	    {
+		"type": "object"
+	    }
+	]
+}`
+
+	allowNullValues = true
+	api, err := openapi2proto.LoadFile("sample/swagger2_with_map_in_ref.yaml")
+	require.NoError(t, err)
+	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 2, "Unexpected number of schemas returned")
+	assert.JSONEq(t, expectedSchema, string(schemas[1].Bytes), "Unexpected schema received")
+
+}
+
+func Test_GenerateJSONSchemas_MapInAReffedObjectAllowingNullValues2(t *testing.T) {
+
+	var expectedSchema = `{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"properties": {
+	    "object_with_map": {
+		"additionalProperties": {
+		    "type": "string"
+		},
+		"oneOf": [
+		    {
+			"type": "null"
+		    },
+		    {
+			"type": "object"
+		    }
+		]
+	    }
+	},
+	"additionalProperties": true,
+	"oneOf": [
+	    {
+		"type": "null"
+	    },
+	    {
+		"type": "object"
+	    }
+	]
+}`
+
+	allowNullValues = true
+	api, err := openapi2proto.LoadFile("sample/swagger2_with_map_in_ref_2.yaml")
+	require.NoError(t, err)
+	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 2, "Unexpected number of schemas returned")
+	assert.JSONEq(t, expectedSchema, string(schemas[1].Bytes), "Unexpected schema received")
+}

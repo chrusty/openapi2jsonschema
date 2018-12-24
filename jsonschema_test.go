@@ -358,3 +358,25 @@ func Test_GenerateJSONSchemas_NumberWithMinMax(t *testing.T) {
 	// assert.Equal(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
 	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes))
 }
+
+func Test_GenerateJSONSchemas_Map(t *testing.T) {
+
+	var expectedSchema = `{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "additionalProperties": {
+        "additionalProperties": true,
+        "type": "string"
+    },
+    "type": "object"
+}`
+
+	allowNullValues = false
+	api, err := openapi2proto.LoadFile("sample/swagger2_with_map.yaml")
+	require.NoError(t, err)
+	schemas, err := MapOpenAPIDefinitionsToJSONSchema(api)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, schemas)
+	assert.Len(t, schemas, 1, "Unexpected number of schemas returned")
+	assert.JSONEq(t, expectedSchema, string(schemas[0].Bytes), "Unexpected schema received")
+}
