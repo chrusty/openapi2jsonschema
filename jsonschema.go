@@ -9,7 +9,6 @@ import (
 
 	openAPI "github.com/NYTimes/openapi2proto/openapi"
 	jsonSchema "github.com/alecthomas/jsonschema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -318,6 +317,5 @@ func generateAdditionalProperties(disallowAdditionalProperties bool) []byte {
 		return []byte("false")
 	}
 
-	spew.Sdump(nil)
 	return []byte("true")
 }
