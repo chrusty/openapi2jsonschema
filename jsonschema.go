@@ -94,6 +94,10 @@ func MapOpenAPIDefinitionsToJSONSchema(openAPISpec *openAPI.Spec) ([]GeneratedJS
 
 }
 
+var (
+	nestedAdditionalProperties = map[string]json.RawMessage{}
+)
+
 // Converts an OpenAPI "Items" into a JSON-Schema:
 func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *openAPI.Schema) (definitionJSONSchema jsonSchema.Type, err error) {
 	var nestedProperties map[string]*openAPI.Schema
@@ -127,7 +131,21 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 
 	// Single-instances of self-defined parameters:
 	if openAPISchema.Ref == "" && !openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY) && openAPISchema.Items == nil {
+		definitionJSONSchema.Properties, err = recurseNestedSchemas(openAPISpec, openAPISchema.Properties)
+
 		if allowNullValues {
+			if openAPISchema.AdditionalProperties != nil && len(openAPISchema.AdditionalProperties.Type) == 1 {
+				definitionJSONSchema.AdditionalProperties = json.RawMessage(fmt.Sprintf("{\"type\": \"%v\"}", openAPISchema.AdditionalProperties.Type[0]))
+				nestedAdditionalProperties[itemName] = definitionJSONSchema.AdditionalProperties
+			}
+
+			if openAPISchema.AdditionalProperties != nil && openAPISchema.AdditionalProperties.Ref != "" {
+				_, name, _ := splitReferencePath(openAPISchema.AdditionalProperties.Ref)
+				if p, ok := nestedAdditionalProperties[name]; ok {
+					definitionJSONSchema.AdditionalProperties = p
+				}
+			}
+
 			definitionJSONSchema.OneOf = []*jsonSchema.Type{
 				{Type: gojsonschema.TYPE_NULL},
 				{Type: mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)},
@@ -135,8 +153,8 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 		} else {
 			definitionJSONSchema.Type = mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)
 		}
+
 		definitionJSONSchema.Required = openAPISchema.Required
-		definitionJSONSchema.Properties, err = recurseNestedSchemas(openAPISpec, openAPISchema.Properties)
 		definitionJSONSchema.Enum = mapEnums(openAPISchema.Enum, openAPISchema.Type)
 
 		if openAPISchema.Format != "" {
@@ -159,6 +177,13 @@ func convertItems(openAPISpec *openAPI.Spec, itemName string, openAPISchema *ope
 		}
 		definitionJSONSchema.Properties, err = recurseNestedSchemas(openAPISpec, nestedProperties)
 		definitionJSONSchema.Enum = mapEnums(enum, []string{definitionJSONSchema.Type})
+
+		if openAPISchema.Ref != "" {
+			_, name, _ := splitReferencePath(openAPISchema.Ref)
+			if p, ok := nestedAdditionalProperties[name]; ok {
+				definitionJSONSchema.AdditionalProperties = p
+			}
+		}
 	}
 
 	// Maintain a list of required items:

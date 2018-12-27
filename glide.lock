@@ -1,17 +1,15 @@
-hash: 06a297153dc2354720ed7850f60fcfa9ea1ec29265944d39392043dc8cb91f4b
-updated: 2018-05-15T08:49:16.460355+01:00
+hash: e0b819d9ff109d57087e17898d8201a3c30e0e306eaad7f877bd20b62c523488
+updated: 2018-12-24T15:06:32.430061Z
 imports:
 - name: github.com/alecthomas/jsonschema
   version: f2c93856175a7dd6abe88c5c3900b67ad054adcc
 - name: github.com/dolmen-go/jsonptr
   version: 1c352ec474fc378d7dfa4115433ef13d0276b526
 - name: github.com/NYTimes/openapi2proto
-  version: 5455d470025633b0a6461730122c37db4e140e1d
+  version: bbb801b5b114e28f124edb38188dc878c85fda38
   subpackages:
-  - compiler
   - internal/option
   - openapi
-  - protobuf
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/stretchr/testify
