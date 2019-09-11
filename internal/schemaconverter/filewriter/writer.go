@@ -53,7 +53,7 @@ func (w *Writer) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJS
 
 	// Prepare a filename:
 	specFileName := w.deriveSpecPathFilename()
-	goConstantsFilename := strings.Replace(fmt.Sprintf("%v/%v%v.go", w.config.OutPath, w.config.GoConstantsFilename, strings.Title(specFileName)), "-", "", 0)
+	goConstantsFilename := w.deriveGoConstantsFilename(specFileName)
 
 	// Go through the JSONSchemas and write each one to a file:
 	for _, generatedJSONSchema := range generatedJSONSchemas {
@@ -71,15 +71,20 @@ func (w *Writer) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJS
 	return nil
 }
 
-// deriveSpecPathFilename cleans up the name of the spec file:
-func (w *Writer) deriveSpecPathFilename() string {
-	_, sourceFileName := filepath.Split(w.config.SpecPath)
-	return strings.TrimSuffix(sourceFileName, filepath.Ext(sourceFileName))
+// deriveGoConstantsFilename derives the go-constants filename:
+func (w *Writer) deriveGoConstantsFilename(specFileName string) string {
+	return strings.Replace(fmt.Sprintf("%v/%v%v.go", w.config.OutPath, w.config.GoConstantsFilename, strings.Title(specFileName)), "-", "", 0)
 }
 
 // deriveJSONSchemaFilename derives JSONSchema filenames:
 func (w *Writer) deriveJSONSchemaFilename(outputFileNameWithoutExtention string) string {
 	return fmt.Sprintf("%s/%s.%s", w.config.OutPath, outputFileNameWithoutExtention, w.config.JSONSchemaFileExtention)
+}
+
+// deriveSpecPathFilename cleans up the name of the spec file:
+func (w *Writer) deriveSpecPathFilename() string {
+	_, sourceFileName := filepath.Split(w.config.SpecPath)
+	return strings.TrimSuffix(sourceFileName, filepath.Ext(sourceFileName))
 }
 
 // writeToFile handles writing files to disk:
