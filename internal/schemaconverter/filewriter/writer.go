@@ -1,4 +1,4 @@
-package openapi2
+package filewriter
 
 import (
 	"fmt"
@@ -9,36 +9,51 @@ import (
 	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
+// Writer handles writing JSONSchemas and Go constants to files:
+type Writer struct {
+	config *types.Config
+	logger *logrus.Logger
+}
+
+// New takes a config and returns a new Writer:
+func New(config *types.Config, logger *logrus.Logger) *Writer {
+	return &Writer{
+		config: config,
+		logger: logger,
+	}
+}
+
 // WriteJSONSchemasToFiles writes each JSONSchema to a file:
-func (c *Converter) WriteJSONSchemasToFiles(generatedJSONSchemas []types.GeneratedJSONSchema) error {
+func (w *Writer) WriteJSONSchemasToFiles(generatedJSONSchemas []types.GeneratedJSONSchema) error {
 
 	// Go through the JSONSchemas and write each one to a file:
 	for _, generatedJSONSchema := range generatedJSONSchemas {
 
 		// Generate a filename for the JSONSchema:
-		jsonSchemaFileName := c.deriveJSONSchemaFilename(generatedJSONSchema.Name)
+		jsonSchemaFileName := w.deriveJSONSchemaFilename(generatedJSONSchema.Name)
 
 		// Write the schemaJSON out to a file:
-		if err := c.writeToFile(jsonSchemaFileName, generatedJSONSchema.Bytes); err != nil {
+		if err := w.writeToFile(jsonSchemaFileName, generatedJSONSchema.Bytes); err != nil {
 			return err
 		}
 
-		c.logger.WithField("jsonschema_name", generatedJSONSchema.Name).WithField("filename", jsonSchemaFileName).Debug("Wrote schema-definition to a file")
+		w.logger.WithField("jsonschema_name", generatedJSONSchema.Name).WithField("filename", jsonSchemaFileName).Debug("Wrote schema-definition to a file")
 	}
 
 	return nil
 }
 
 // WriteGoConstantsToFile writes an importable go package containing constants for each JSONSchema:
-func (c *Converter) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJSONSchema) error {
+func (w *Writer) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJSONSchema) error {
 
 	goConstantsCode := []byte("package schema\n\n")
 
 	// Prepare a filename:
-	specFileName := c.deriveSpecPathFilename()
-	goConstantsFilename := strings.Replace(fmt.Sprintf("%v/%v%v.go", c.config.OutPath, c.config.GoConstantsFilename, strings.Title(specFileName)), "-", "", 0)
+	specFileName := w.deriveSpecPathFilename()
+	goConstantsFilename := strings.Replace(fmt.Sprintf("%v/%v%v.go", w.config.OutPath, w.config.GoConstantsFilename, strings.Title(specFileName)), "-", "", 0)
 
 	// Go through the JSONSchemas and write each one to a file:
 	for _, generatedJSONSchema := range generatedJSONSchemas {
@@ -47,28 +62,28 @@ func (c *Converter) WriteGoConstantsToFile(generatedJSONSchemas []types.Generate
 	}
 
 	// Write the schemaJSON out to a file:
-	if err := c.writeToFile(goConstantsFilename, goConstantsCode); err != nil {
+	if err := w.writeToFile(goConstantsFilename, goConstantsCode); err != nil {
 		return err
 	}
 
-	c.logger.WithField("go_constants_filename", goConstantsFilename).Debug("Wrote GoLang constants to a file")
+	w.logger.WithField("go_constants_filename", goConstantsFilename).Debug("Wrote GoLang constants to a file")
 
 	return nil
 }
 
 // deriveSpecPathFilename cleans up the name of the spec file:
-func (c *Converter) deriveSpecPathFilename() string {
-	_, sourceFileName := filepath.Split(c.config.SpecPath)
+func (w *Writer) deriveSpecPathFilename() string {
+	_, sourceFileName := filepath.Split(w.config.SpecPath)
 	return strings.TrimSuffix(sourceFileName, filepath.Ext(sourceFileName))
 }
 
 // deriveJSONSchemaFilename derives JSONSchema filenames:
-func (c *Converter) deriveJSONSchemaFilename(outputFileNameWithoutExtention string) string {
-	return fmt.Sprintf("%s/%s.%s", c.config.OutPath, outputFileNameWithoutExtention, c.config.JSONSchemaFileExtention)
+func (w *Writer) deriveJSONSchemaFilename(outputFileNameWithoutExtention string) string {
+	return fmt.Sprintf("%s/%s.%s", w.config.OutPath, outputFileNameWithoutExtention, w.config.JSONSchemaFileExtention)
 }
 
 // writeToFile handles writing files to disk:
-func (c *Converter) writeToFile(fileName string, fileData []byte) error {
+func (w *Writer) writeToFile(fileName string, fileData []byte) error {
 
 	// Open output file:
 	outputFile, err := os.Create(fileName)

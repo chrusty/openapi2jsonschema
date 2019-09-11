@@ -45,14 +45,17 @@ func main() {
 		logger.WithError(err).Fatal("Unable to generate json-schema")
 	}
 
+	// Prepare a schema writer:
+	schemaWriter := schemaconverter.NewWriter(config, logger)
+
 	// Write the generated JSONSchemas to files:
-	if err := schemaConverter.WriteJSONSchemasToFiles(generatedJSONSchemas); err != nil {
+	if err := schemaWriter.WriteJSONSchemasToFiles(generatedJSONSchemas); err != nil {
 		logger.WithError(err).Fatal("Unable to write JSONSchemas")
 	}
 
 	// Write a file containing go-constants for the generated JSON schemas:
 	if config.GoConstants {
-		if err := schemaConverter.WriteGoConstantsToFile(generatedJSONSchemas); err != nil {
+		if err := schemaWriter.WriteGoConstantsToFile(generatedJSONSchemas); err != nil {
 			logger.WithError(err).Fatal("Unable to write go-constants")
 		}
 	}
