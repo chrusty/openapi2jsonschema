@@ -4,12 +4,13 @@ import (
 	"flag"
 
 	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter"
+	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
 
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	config = &schemaconverter.Config{
+	config = &types.Config{
 		GoConstantsFilename:     "jsonschemas",
 		JSONSchemaFileExtention: "jsonschema",
 	}
@@ -33,7 +34,7 @@ func main() {
 	logger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
 
 	// Prepare a new schema converter:
-	schemaConverter, err := schemaconverter.New(config, logger)
+	schemaConverter, err := schemaconverter.NewV2(config, logger)
 	if err != nil {
 		logger.WithError(err).Fatal("Unable to prepare a schema converter")
 	}

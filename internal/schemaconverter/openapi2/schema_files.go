@@ -1,4 +1,4 @@
-package schemaconverter
+package openapi2
 
 import (
 	"fmt"
@@ -6,11 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+
 	"github.com/pkg/errors"
 )
 
 // WriteJSONSchemasToFiles writes each JSONSchema to a file:
-func (c *Converter) WriteJSONSchemasToFiles(generatedJSONSchemas []GeneratedJSONSchema) error {
+func (c *Converter) WriteJSONSchemasToFiles(generatedJSONSchemas []types.GeneratedJSONSchema) error {
 
 	// Go through the JSONSchemas and write each one to a file:
 	for _, generatedJSONSchema := range generatedJSONSchemas {
@@ -30,7 +32,7 @@ func (c *Converter) WriteJSONSchemasToFiles(generatedJSONSchemas []GeneratedJSON
 }
 
 // WriteGoConstantsToFile writes an importable go package containing constants for each JSONSchema:
-func (c *Converter) WriteGoConstantsToFile(generatedJSONSchemas []GeneratedJSONSchema) error {
+func (c *Converter) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJSONSchema) error {
 
 	goConstantsCode := []byte("package schema\n\n")
 

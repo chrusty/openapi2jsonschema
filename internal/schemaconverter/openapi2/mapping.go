@@ -1,4 +1,4 @@
-package schemaconverter
+package openapi2
 
 import (
 	"encoding/json"
@@ -7,21 +7,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+
 	openAPI "github.com/NYTimes/openapi2proto/openapi"
 	jsonSchema "github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// GeneratedJSONSchema is a JSONSchema that has been mapped from an OpenAPI spec:
-type GeneratedJSONSchema struct {
-	Name  string
-	Bytes []byte
-}
-
 // mapOpenAPIDefinitionsToJSONSchema converts an OpenAPI "Spec" into a JSONSchema:
-func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]GeneratedJSONSchema, error) {
-	var generatedJSONSchemas []GeneratedJSONSchema
+func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]types.GeneratedJSONSchema, error) {
+	var generatedJSONSchemas []types.GeneratedJSONSchema
 
 	// if we have no definitions then copy them from parameters:
 	if c.api.Definitions == nil {
@@ -39,7 +35,7 @@ func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]GeneratedJSONSchema, 
 	for definitionName, definition := range c.api.Definitions {
 
 		var definitionJSONSchema jsonSchema.Type
-		var generatedJSONSchema GeneratedJSONSchema
+		var generatedJSONSchema types.GeneratedJSONSchema
 		var err error
 
 		// Report:

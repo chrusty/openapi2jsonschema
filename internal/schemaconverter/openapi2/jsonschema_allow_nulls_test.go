@@ -1,8 +1,9 @@
-package schemaconverter
+package openapi2
 
 import (
 	"testing"
 
+	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,11 +56,11 @@ func TestGenerateJSONSchemasAllowNullsFlatObject(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_flat-object.yaml",
+		SpecPath:                  "../samples/swagger2_flat-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -111,11 +112,11 @@ func TestGenerateJSONSchemasAllowNullsFlatObjectWithEnum(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_flat-object-with-enum.yaml",
+		SpecPath:                  "../samples/swagger2_flat-object-with-enum.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -306,11 +307,11 @@ func TestGenerateJSONSchemasAllowNullsObjectWithArrays(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_array-of-referenced-object.yaml",
+		SpecPath:                  "../samples/swagger2_array-of-referenced-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -396,11 +397,11 @@ func TestGenerateJSONSchemasAllowNullsObjectWithPattern(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_object-with-pattern.yaml",
+		SpecPath:                  "../samples/swagger2_object-with-pattern.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -543,11 +544,11 @@ func TestGenerateJSONSchemasAllowNullsReferencedObject(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_referenced-object.yaml",
+		SpecPath:                  "../samples/swagger2_referenced-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -611,11 +612,11 @@ func TestGenerateJSONSchemasAllowNullsNumberWithMinMax(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_flat-object-with-number-options.yaml",
+		SpecPath:                  "../samples/swagger2_flat-object-with-number-options.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -647,11 +648,11 @@ func TestGenerateJSONSchemasMapAllowingNullValues(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_with_map.yaml",
+		SpecPath:                  "../samples/swagger2_with_map.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -696,11 +697,11 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues(t *testing.T) {
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_with_map_in_ref.yaml",
+		SpecPath:                  "../samples/swagger2_with_map_in_ref.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -746,11 +747,11 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues2(t *testing.T) 
 }`
 
 	// Prepare a new schema converter:
-	schemaConverter, err := New(&Config{
+	schemaConverter, err := New(&types.Config{
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "samples/swagger2_with_map_in_ref_2.yaml",
+		SpecPath:                  "../samples/swagger2_with_map_in_ref_2.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 

@@ -1,31 +1,22 @@
-package schemaconverter
+package openapi2
 
 import (
+	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+
 	openapi2proto "github.com/NYTimes/openapi2proto/openapi"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
-// Config represents all the options for the converter:
-type Config struct {
-	AllowNullValues           bool
-	BlockAdditionalProperties bool
-	JSONSchemaFileExtention   string
-	GoConstants               bool
-	GoConstantsFilename       string
-	OutPath                   string
-	SpecPath                  string
-}
-
 // Converter performs schema conversion:
 type Converter struct {
 	api    *openapi2proto.Spec
-	config *Config
+	config *types.Config
 	logger *logrus.Logger
 }
 
 // New takes a config and returns a new Converter:
-func New(config *Config, logger *logrus.Logger) (*Converter, error) {
+func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 
 	// Load the OpenAPI spec:
 	api, err := openapi2proto.LoadFile(config.SpecPath)
@@ -44,7 +35,7 @@ func New(config *Config, logger *logrus.Logger) (*Converter, error) {
 }
 
 // GenerateJSONSchemas takes an OpenAPI "Spec" and converts each definition into a JSONSchema:
-func (c *Converter) GenerateJSONSchemas() ([]GeneratedJSONSchema, error) {
+func (c *Converter) GenerateJSONSchemas() ([]types.GeneratedJSONSchema, error) {
 
 	c.logger.Debug("Converting API")
 
