@@ -1,0 +1,23 @@
+openapi: 3.0.1
+info:
+  description: 'A sample object containing standard properties'
+  title: 'Sample: flat object'
+
+components:
+  schemas:
+
+    FlatObject:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: date-time
+          description: Some ID
+          example: 'xyz'
+        name:
+          type: string
+          description: 'Some name'
+          example: 'Prawn'

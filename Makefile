@@ -16,10 +16,10 @@ build_linux:
 samples: build
 	@echo "Generating sample JSON-Schemas ..."
 	@mkdir -p out
-	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2_flat-object.yaml"                 -go_constants  -block_additional_properties  -out="./out"
-	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2_referenced-object.yaml"           -go_constants  -block_additional_properties  -out="./out"
-	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2_object-with-pattern.yaml"         -go_constants  -block_additional_properties  -out="./out"
-	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2_array-of-referenced-object.yaml"  -go_constants  -block_additional_properties  -out="./out"
+	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2/flat-object.yaml"                 -go_constants  -block_additional_properties  -out="./out"
+	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2/referenced-object.yaml"           -go_constants  -block_additional_properties  -out="./out"
+	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2/object-with-pattern.yaml"         -go_constants  -block_additional_properties  -out="./out"
+	@bin/openapi2jsonschema  -spec="internal/schemaconverter/samples/swagger2/array-of-referenced-object.yaml"  -go_constants  -block_additional_properties  -out="./out"
 
 test:
 	@go test ./... -cover

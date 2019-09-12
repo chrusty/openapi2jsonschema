@@ -1,0 +1,45 @@
+openapi: 3.0.1
+info:
+  description: 'A sample object containing a referenced object'
+  title: 'Sample: referenced object'
+
+components:
+  schemas:
+
+    ObjectWithReferencedObject:
+      type: object
+      required:
+        - user_id
+        - user_name
+      properties:
+        user_id:
+          type: integer
+          description: Some ID
+          example: 3
+        user_name:
+          type: string
+          description: 'Some name'
+          example: 'Prawn'
+        contact_ref:
+          $ref: '#/components/schemas/ReferencedObject'
+        contact_additional_props_map:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ReferencedObject'
+
+    ReferencedObject:
+      type: object
+      required:
+        - email_address
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email_address:
+          type: string
+        phone_number:
+          type: string
+        spam:
+          type: boolean
+          description: 'Send this person spam?'

@@ -39,7 +39,7 @@ func TestGenerateJSONSchemasFlatObject(t *testing.T) {
 		AllowNullValues:           false,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2_flat-object.yaml",
+		SpecPath:                  "../samples/swagger2/flat-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -80,7 +80,7 @@ func TestGenerateJSONSchemasFlatObjectWithEnum(t *testing.T) {
 		AllowNullValues:           false,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2_flat-object-with-enum.yaml",
+		SpecPath:                  "../samples/swagger2/flat-object-with-enum.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -184,7 +184,7 @@ func TestGenerateJSONSchemasObjectWithArrays(t *testing.T) {
 		AllowNullValues:           false,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2_array-of-referenced-object.yaml",
+		SpecPath:                  "../samples/swagger2/array-of-referenced-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -239,7 +239,7 @@ func TestGenerateJSONSchemasObjectWithPattern(t *testing.T) {
 		AllowNullValues:           false,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2_object-with-pattern.yaml",
+		SpecPath:                  "../samples/swagger2/object-with-pattern.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -345,7 +345,7 @@ func TestGenerateJSONSchemasReferencedObject(t *testing.T) {
 		AllowNullValues:           false,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2_referenced-object.yaml",
+		SpecPath:                  "../samples/swagger2/referenced-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -392,7 +392,7 @@ func TestGenerateJSONSchemasNumberWithMinMax(t *testing.T) {
 		AllowNullValues:           false,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2_flat-object-with-number-options.yaml",
+		SpecPath:                  "../samples/swagger2/flat-object-with-number-options.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -422,7 +422,7 @@ func TestGenerateJSONSchemasMap(t *testing.T) {
 		AllowNullValues:           false,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2_with_map.yaml",
+		SpecPath:                  "../samples/swagger2/with_map.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 

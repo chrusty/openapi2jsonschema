@@ -59,7 +59,6 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 		MinLength:            int(openAPISchema.Value.MinLength),
 		Pattern:              openAPISchema.Value.Pattern,
 		Properties:           make(map[string]*jsonSchema.Type),
-		Title:                openAPISchema.Ref,
 	}
 
 	if openAPISchema.Value.MaxLength != nil {

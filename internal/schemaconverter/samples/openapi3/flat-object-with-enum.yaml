@@ -1,0 +1,17 @@
+openapi: 3.0.1
+info:
+  description: 'A sample object containing standard properties'
+  title: 'Sample: flat object with enum'
+
+components:
+  schemas:
+
+    FlatObjectWithEnum:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          enum: ["a", "b", "c"]

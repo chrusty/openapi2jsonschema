@@ -1,0 +1,24 @@
+openapi: 3.0.1
+info:
+  description: 'A sample object containing standard properties'
+  title: 'Sample: flat object with number pattern'
+
+components:
+  schemas:
+
+    FlatObjectWithNumberOptions:
+      type: object
+      description: Specifies a geographic location in terms of its Latitude and Longitude
+      required:
+        - latitude
+      properties:
+        latitude:
+          type: number
+          format: double
+          description: 'The latitude in degrees. It must be in the range [-90.0, +90.0]'
+          minimum: -90
+          maximum: 90
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10
