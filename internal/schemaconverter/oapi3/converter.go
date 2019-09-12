@@ -24,7 +24,7 @@ func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 		return nil, errors.Wrapf(err, "Unable to load spec (%s)", config.SpecPath)
 	}
 
-	logger.WithField("title", swagger.Info.Title).WithField("description", swagger.Info.Description).Info("Prepared a converter for API")
+	logger.WithField("title", swagger.Info.Title).WithField("description", swagger.Info.Description).Info("Prepared a converter for Swagger / OpenAPI3")
 
 	// Return a new *Converter:
 	return &Converter{

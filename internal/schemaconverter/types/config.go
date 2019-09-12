@@ -9,4 +9,5 @@ type Config struct {
 	GoConstantsFilename       string
 	OutPath                   string
 	SpecPath                  string
+	V3                        bool
 }

@@ -20,19 +20,19 @@ func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]types.GeneratedJSONSc
 	var generatedJSONSchemas []types.GeneratedJSONSchema
 
 	// if we have no definitions then copy them from parameters:
-	if c.api.Definitions == nil {
+	if c.spec.Definitions == nil {
 		c.logger.Debug("No definitions found - copying from parameters")
-		c.api.Definitions = map[string]*openAPI.Schema{}
+		c.spec.Definitions = map[string]*openAPI.Schema{}
 	}
 
 	// jam all the parameters into the normal 'definitions' for easier reference.
-	for paramName, param := range c.api.Parameters {
+	for paramName, param := range c.spec.Parameters {
 		c.logger.WithField("parameter_name", paramName).Trace("Found a parameter")
-		c.api.Parameters[paramName] = param
+		c.spec.Parameters[paramName] = param
 	}
 
 	// Iterate through the definitions, creating JSONSchemas for each:
-	for definitionName, definition := range c.api.Definitions {
+	for definitionName, definition := range c.spec.Definitions {
 
 		var definitionJSONSchema jsonSchema.Type
 		var generatedJSONSchema types.GeneratedJSONSchema
@@ -74,6 +74,7 @@ var (
 // convertItems converts an OpenAPI "Items" into a JSON-Schema:
 func (c *Converter) convertItems(itemName string, openAPISchema *openAPI.Schema) (definitionJSONSchema jsonSchema.Type, err error) {
 	var nestedProperties map[string]*openAPI.Schema
+
 	// Prepare a new jsonschema:
 	definitionJSONSchema = jsonSchema.Type{
 		AdditionalProperties: c.generateAdditionalProperties(),
@@ -253,7 +254,7 @@ func (c *Converter) lookupReference(referencePath string) (nestedProperties map[
 
 	// Look up the referenced model:
 	c.logger.WithField("reference", reference).Trace("Found a referenced model")
-	referencedDefinition, ok := c.api.Definitions[reference]
+	referencedDefinition, ok := c.spec.Definitions[reference]
 	if !ok {
 		err = fmt.Errorf("Unable to find a referenced model (%s)", reference)
 		return

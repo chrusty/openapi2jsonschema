@@ -10,25 +10,25 @@ import (
 
 // Converter performs schema conversion:
 type Converter struct {
-	api    *openapi2proto.Spec
 	config *types.Config
 	logger *logrus.Logger
+	spec   *openapi2proto.Spec
 }
 
 // New takes a config and returns a new Converter:
 func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 
 	// Load the OpenAPI spec:
-	api, err := openapi2proto.LoadFile(config.SpecPath)
+	spec, err := openapi2proto.LoadFile(config.SpecPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to load spec (%s)", config.SpecPath)
 	}
 
-	logger.WithField("title", api.Info.Title).WithField("description", api.Info.Description).Info("Prepared a converter for API")
+	logger.WithField("title", spec.Info.Title).WithField("description", spec.Info.Description).Info("Prepared a converter for Swagger / OpenAPI2")
 
 	// Return a new *Converter:
 	return &Converter{
-		api:    api,
+		spec:   spec,
 		config: config,
 		logger: logger,
 	}, nil

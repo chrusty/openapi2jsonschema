@@ -24,6 +24,7 @@ func init() {
 	flag.BoolVar(&config.GoConstants, "go_constants", false, "Output GoLang constants (in addition to JSONSchemas)?")
 	flag.StringVar(&config.OutPath, "out", "./out", "Where to write jsonschema output files to")
 	flag.StringVar(&config.SpecPath, "spec", "../../spec.yaml", "Location of the swagger spec file")
+	flag.BoolVar(&config.V3, "v3", false, "Use OpenAPI3 (instead of Swagger 2)?")
 	flag.Parse()
 }
 
@@ -33,8 +34,8 @@ func main() {
 	logger := logrus.New()
 	logger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
 
-	// Prepare a new schema converter:
-	schemaConverter, err := schemaconverter.NewV2(config, logger)
+	// Prepare a new schema converter and writer:
+	schemaConverter, schemaWriter, err := schemaconverter.New(config, logger)
 	if err != nil {
 		logger.WithError(err).Fatal("Unable to prepare a schema converter")
 	}
@@ -44,9 +45,6 @@ func main() {
 	if err != nil {
 		logger.WithError(err).Fatal("Unable to generate json-schema")
 	}
-
-	// Prepare a schema writer:
-	schemaWriter := schemaconverter.NewWriter(config, logger)
 
 	// Write the generated JSONSchemas to files:
 	if err := schemaWriter.WriteJSONSchemasToFiles(generatedJSONSchemas); err != nil {
