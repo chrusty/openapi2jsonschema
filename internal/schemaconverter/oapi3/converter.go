@@ -1,6 +1,7 @@
 package oapi3
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -13,9 +14,10 @@ import (
 
 // Converter performs schema conversion:
 type Converter struct {
-	config  *types.Config
-	logger  *logrus.Logger
-	swagger *openapi3.Swagger
+	config                     *types.Config
+	logger                     *logrus.Logger
+	nestedAdditionalProperties map[string]json.RawMessage
+	swagger                    *openapi3.Swagger
 }
 
 // New takes a config and returns a new Converter:
@@ -32,7 +34,8 @@ func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 		return nil, fmt.Errorf("This spec (%s) is not OpenAPI 3.x", swagger.OpenAPI)
 	}
 
-	logger.WithField("title", swagger.Info.Title).WithField("description", swagger.Info.Description).WithField("version", swagger.Info.Version).Info("Ready to convert Swagger / OpenAPI3")
+	logger.WithField("title", swagger.Info.Title).WithField("version", swagger.Info.Version).Info("Ready to convert Swagger / OpenAPI3")
+	logger.WithField("description", swagger.Info.Description).Trace("Description")
 
 	// Return a new *Converter:
 	return &Converter{
