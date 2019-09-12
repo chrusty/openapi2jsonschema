@@ -164,15 +164,12 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openAPI.Schema)
 
 		// if we have any nested items in the object then we should process them
 		if additionalPropertiesSchema := openAPISchema.AdditionalProperties; additionalPropertiesSchema != nil {
-			var schema jsonSchema.Type
-			var raw json.RawMessage
-			var err error
-			schema, err = c.convertItems(itemName, additionalPropertiesSchema)
+			schema, err := c.convertItems(itemName, additionalPropertiesSchema)
 
 			// Annoyingly since "additionalProperties" can actually be a
 			// boolean or an object we have to marshal the resulting schema
 			// so we can assign the raw bytes to back
-			raw, err = json.Marshal(schema)
+			raw, err := json.Marshal(schema)
 			definitionJSONSchema.AdditionalProperties = raw
 			return definitionJSONSchema, err
 		}
