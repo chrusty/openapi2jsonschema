@@ -98,9 +98,11 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 			}
 
 			if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Ref != "" {
-				name, _ := c.splitReferencePath(openAPISchema.Value.AdditionalProperties.Ref)
-				if p, ok := c.nestedAdditionalProperties[name]; ok {
-					definitionJSONSchema.AdditionalProperties = p
+				referenceName, err := c.splitReferencePath(openAPISchema.Value.AdditionalProperties.Ref)
+				if err == nil {
+					if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
+						definitionJSONSchema.AdditionalProperties = p
+					}
 				}
 			}
 
@@ -142,10 +144,12 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 		// definitionJSONSchema.Enum = c.mapEnums(enum, []string{definitionJSONSchema.Type})
 
 		if openAPISchema.Ref != "" {
-			name, _ := c.splitReferencePath(openAPISchema.Ref)
-			if p, ok := c.nestedAdditionalProperties[name]; ok {
+			referenceName, _ := c.splitReferencePath(openAPISchema.Ref)
+			// if err == nil {
+			if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
 				definitionJSONSchema.AdditionalProperties = p
 			}
+			// }
 		}
 	}
 
@@ -219,13 +223,13 @@ func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaType string) str
 	}
 }
 
-// splitReferencePath breaks up a reference path into its components:
+// splitReferencePath breaks up a reference path into its components (OpenAPI3 references look like "#/components/schemas/Something"):
 func (c *Converter) splitReferencePath(ref string) (string, error) {
 
 	// split on '/':
 	refDatas := strings.Split(ref, "/")
 
-	// Return the 2nd and 3rd components (source and definition name):
+	// Return the 4th component (definition name):
 	if len(refDatas) > 2 {
 		return refDatas[3], nil
 	}
@@ -237,16 +241,16 @@ func (c *Converter) lookupReference(referencePath string) (nestedProperties map[
 	c.logger.WithField("referencePath", referencePath).Trace("Looking up reference")
 
 	// Break up the path:
-	reference, err := c.splitReferencePath(referencePath)
+	referenceName, err := c.splitReferencePath(referencePath)
 	if err != nil {
 		return
 	}
 
 	// Look up the referenced model:
-	c.logger.WithField("reference", reference).Trace("Found a referenced model")
-	referencedDefinition, ok := c.swagger.Components.Schemas[reference]
+	c.logger.WithField("reference", referenceName).Trace("Found a referenced model")
+	referencedDefinition, ok := c.swagger.Components.Schemas[referenceName]
 	if !ok {
-		err = fmt.Errorf("Unable to find a referenced model (%s)", reference)
+		err = fmt.Errorf("Unable to find a referenced model (%s)", referenceName)
 		return
 	}
 

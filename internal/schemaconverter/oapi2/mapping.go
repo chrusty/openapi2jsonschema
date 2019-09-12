@@ -109,9 +109,11 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openAPI.Schema)
 			}
 
 			if openAPISchema.AdditionalProperties != nil && openAPISchema.AdditionalProperties.Ref != "" {
-				_, name, _ := c.splitReferencePath(openAPISchema.AdditionalProperties.Ref)
-				if p, ok := c.nestedAdditionalProperties[name]; ok {
-					definitionJSONSchema.AdditionalProperties = p
+				referenceName, err := c.splitReferencePath(openAPISchema.AdditionalProperties.Ref)
+				if err == nil {
+					if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
+						definitionJSONSchema.AdditionalProperties = p
+					}
 				}
 			}
 
@@ -152,10 +154,12 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openAPI.Schema)
 		definitionJSONSchema.Enum = c.mapEnums(enum, []string{definitionJSONSchema.Type})
 
 		if openAPISchema.Ref != "" {
-			_, name, _ := c.splitReferencePath(openAPISchema.Ref)
-			if p, ok := c.nestedAdditionalProperties[name]; ok {
+			referenceName, _ := c.splitReferencePath(openAPISchema.Ref)
+			// if err == nil {
+			if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
 				definitionJSONSchema.AdditionalProperties = p
 			}
+			// }
 		}
 	}
 
@@ -226,33 +230,34 @@ func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaTypes openAPI.Sc
 	}
 }
 
-// splitReferencePath breaks up a reference path into its components:
-func (c *Converter) splitReferencePath(ref string) (string, string, error) {
+// splitReferencePath breaks up a reference path into its components (OpenAPI2 references look like "#/definitions/Something"):
+func (c *Converter) splitReferencePath(ref string) (string, error) {
 
-	// split on '/'
+	// split on '/':
 	refDatas := strings.Split(ref, "/")
 
-	// Return the 2nd and 3rd components (source and definition name):
+	// Return the 3rd component (definition name):
 	if len(refDatas) > 1 {
-		return refDatas[1], refDatas[2], nil
+		return refDatas[2], nil
 	}
-	return ref, "", fmt.Errorf("Unable to split this reference (%s)", ref)
+	return "", fmt.Errorf("Unable to split this reference (%s)", ref)
 }
 
 // lookupReference looks up a reference and returns its schema and metadata:
 func (c *Converter) lookupReference(referencePath string) (nestedProperties map[string]*openAPI.Schema, definitionJSONSchemaType string, requiredProperties []string, enum []string, err error) {
+	c.logger.WithField("referencePath", referencePath).Trace("Looking up reference")
 
 	// Break up the path:
-	_, reference, err := c.splitReferencePath(referencePath)
+	referenceName, err := c.splitReferencePath(referencePath)
 	if err != nil {
 		return
 	}
 
 	// Look up the referenced model:
-	c.logger.WithField("reference", reference).Trace("Found a referenced model")
-	referencedDefinition, ok := c.spec.Definitions[reference]
+	c.logger.WithField("reference", referenceName).Trace("Found a referenced model")
+	referencedDefinition, ok := c.spec.Definitions[referenceName]
 	if !ok {
-		err = fmt.Errorf("Unable to find a referenced model (%s)", reference)
+		err = fmt.Errorf("Unable to find a referenced model (%s)", referenceName)
 		return
 	}
 
