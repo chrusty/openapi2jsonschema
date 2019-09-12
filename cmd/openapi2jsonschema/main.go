@@ -23,7 +23,7 @@ func init() {
 	flag.StringVar(&logLevel, "log_level", "info", "Log level [trace, debug, info, warn, error]")
 	flag.BoolVar(&config.GoConstants, "go_constants", false, "Output GoLang constants (in addition to JSONSchemas)?")
 	flag.StringVar(&config.OutPath, "out", "./out", "Where to write jsonschema output files to")
-	flag.StringVar(&config.SpecPath, "spec", "../../spec.yaml", "Location of the swagger spec file")
+	flag.StringVar(&config.SpecPath, "spec", "spec.yaml", "Location of the swagger spec file")
 	flag.BoolVar(&config.V3, "v3", false, "Use OpenAPI3 (instead of Swagger 2)?")
 	flag.Parse()
 }
