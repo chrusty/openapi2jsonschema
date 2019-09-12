@@ -1,6 +1,7 @@
 package oapi2
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -13,9 +14,10 @@ import (
 
 // Converter performs schema conversion:
 type Converter struct {
-	config *types.Config
-	logger *logrus.Logger
-	spec   *openapi2proto.Spec
+	config                     *types.Config
+	logger                     *logrus.Logger
+	nestedAdditionalProperties map[string]json.RawMessage
+	spec                       *openapi2proto.Spec
 }
 
 // New takes a config and returns a new Converter:
@@ -32,13 +34,15 @@ func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 		return nil, fmt.Errorf("This spec (%s) is not OpenAPI 2.x", spec.Swagger)
 	}
 
-	logger.WithField("title", spec.Info.Title).WithField("description", spec.Info.Description).WithField("version", spec.Info.Version).Info("Ready to convert Swagger / OpenAPI2")
+	logger.WithField("title", spec.Info.Title).WithField("version", spec.Info.Version).Info("Ready to convert Swagger / OpenAPI2")
+	logger.WithField("description", spec.Info.Description).Trace("Description")
 
 	// Return a new *Converter:
 	return &Converter{
-		spec:   spec,
-		config: config,
-		logger: logger,
+		spec:                       spec,
+		config:                     config,
+		logger:                     logger,
+		nestedAdditionalProperties: make(map[string]json.RawMessage),
 	}, nil
 }
 
