@@ -1,36 +1,36 @@
-package openapi2
+package oapi3
 
 import (
 	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
 
-	openapi2proto "github.com/NYTimes/openapi2proto/openapi"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 // Converter performs schema conversion:
 type Converter struct {
-	api    *openapi2proto.Spec
-	config *types.Config
-	logger *logrus.Logger
+	config  *types.Config
+	logger  *logrus.Logger
+	swagger *openapi3.Swagger
 }
 
 // New takes a config and returns a new Converter:
 func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 
 	// Load the OpenAPI spec:
-	api, err := openapi2proto.LoadFile(config.SpecPath)
+	swagger, err := openapi3.NewSwaggerLoader().LoadSwaggerFromFile(config.SpecPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to load spec (%s)", config.SpecPath)
 	}
 
-	logger.WithField("title", api.Info.Title).WithField("description", api.Info.Description).Info("Prepared a converter for API")
+	logger.WithField("title", swagger.Info.Title).WithField("description", swagger.Info.Description).Info("Prepared a converter for API")
 
 	// Return a new *Converter:
 	return &Converter{
-		api:    api,
-		config: config,
-		logger: logger,
+		config:  config,
+		logger:  logger,
+		swagger: swagger,
 	}, nil
 }
 

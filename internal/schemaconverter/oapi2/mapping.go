@@ -1,4 +1,4 @@
-package openapi2
+package oapi2
 
 import (
 	"encoding/json"
