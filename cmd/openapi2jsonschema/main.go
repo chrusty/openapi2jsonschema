@@ -34,6 +34,13 @@ func main() {
 	logger := logrus.New()
 	logger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
 
+	// Parse the log-level:
+	parsedLogLevel, err := logrus.ParseLevel(logLevel)
+	if err != nil {
+		logger.WithError(err).Fatal("Unable to parse log_level")
+	}
+	logger.SetLevel(parsedLogLevel)
+
 	// Prepare a new schema converter and writer:
 	schemaConverter, schemaWriter, err := schemaconverter.New(config, logger)
 	if err != nil {

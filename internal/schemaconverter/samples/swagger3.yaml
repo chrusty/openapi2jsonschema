@@ -1,0 +1,197 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Stacks API
+  description: API responsible for manage a stack infrastructure definition
+paths:
+  /version:
+    get:
+      description: |
+        Returns the application version information
+      operationId: getVersion
+      responses:
+        '200':
+          description: version information
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /:
+    get:
+      description: |
+        Returns all stacks
+      operationId: findStacks
+      parameters:
+        - name: limit
+          in: query
+          description: maximum number of results to return. Defaults to 20
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        '200':
+          description: stack response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stack'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      description: Creates a new stack.  Duplicates are not allowed
+      operationId: addStack
+      requestBody:
+        description: Stack to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stack'
+      responses:
+        '200':
+          description: stack response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stack'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+  /{name}:
+    get:
+      description: Returns a stack based on the name
+      operationId: findStackByName
+      parameters:
+        - name: name
+          in: path
+          description: name of stack to fetch
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: stack response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stack'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      description: Updates a stack by name
+      operationId: updateStack
+      parameters:
+        - name: name
+          in: path
+          description: name of stack to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Stack to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stack'
+      responses:
+        '200':
+          description: stack response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stack'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      description: deletes a single stack based on the name supplied
+      operationId: deleteStack
+      parameters:
+        - name: name
+          in: path
+          description: name of stack to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: stack deleted
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Stack:
+      required:
+        - metadata
+        - spec
+      properties:
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        spec:
+          type: object
+          additionalProperties: true
+          #$ref: '#/components/schemas/StackSpec'
+
+    # TODO: figure out how add additionalProperties to the spec block or
+    # make it so every TF option is defined in this spec
+    StackSpec:
+      required:
+        - account_name
+        - network_name
+      properties:
+        account_name:
+          type: string
+        network_name:
+          type: string
+      additionalProperties: true
+
+    Metadata:
+      required:
+        - name
+        - cloudworksEnv
+        - cloudProvider
+      properties:
+        name:
+          type: string
+        cloudworksEnv:
+          type: string
+        cloudProvider:
+          type: string
+          enum: 
+            - aws
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
