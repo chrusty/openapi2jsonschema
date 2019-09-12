@@ -2,6 +2,7 @@ swagger: '2.0'
 info:
   description: 'A sample object with a validation pattern (regex)'
   title: 'Sample: object with pattern'
+  version: 1.2.5
 
 definitions:
 

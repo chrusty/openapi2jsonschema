@@ -2,6 +2,7 @@ openapi: 3.0.1
 info:
   description: 'A sample object containing standard properties'
   title: 'Sample: flat object with number pattern'
+  version: 1.3.3
 
 components:
   schemas:

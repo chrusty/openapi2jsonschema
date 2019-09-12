@@ -2,6 +2,7 @@ openapi: 3.0.1
 info:
   description: 'An object with string to string mapping'
   title: 'Sample: with map'
+  version: 1.3.7
 
 components:
   schemas:

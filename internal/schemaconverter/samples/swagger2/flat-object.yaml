@@ -2,6 +2,7 @@ swagger: '2.0'
 info:
   description: 'A sample object containing standard properties'
   title: 'Sample: flat object'
+  version: 1.2.4
 
 definitions:
 

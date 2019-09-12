@@ -1,6 +1,8 @@
 swagger: '2.0'
 info:
   description: 'An object with string to string mapping in a refed object'
+  title: 'Sample: mapping in a referenced object 2'
+  version: 1.2.7
 
 definitions:
 

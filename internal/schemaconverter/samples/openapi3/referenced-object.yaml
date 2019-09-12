@@ -2,6 +2,7 @@ openapi: 3.0.1
 info:
   description: 'A sample object containing a referenced object'
   title: 'Sample: referenced object'
+  version: 1.3.6
 
 components:
   schemas:

@@ -2,6 +2,7 @@ swagger: '2.0'
 info:
   description: 'A sample object containing a referenced object'
   title: 'Sample: referenced object'
+  version: 1.2.6
 
 definitions:
 
