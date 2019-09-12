@@ -1,6 +1,9 @@
 package oapi3
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -24,7 +27,12 @@ func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 		return nil, errors.Wrapf(err, "Unable to load spec (%s)", config.SpecPath)
 	}
 
-	logger.WithField("title", swagger.Info.Title).WithField("description", swagger.Info.Description).Info("Prepared a converter for Swagger / OpenAPI3")
+	// Make sure the provided spec is really OpenAPI 3.x:
+	if !strings.HasPrefix(swagger.OpenAPI, "3") {
+		return nil, fmt.Errorf("This spec (%s) is not OpenAPI 3.x", swagger.OpenAPI)
+	}
+
+	logger.WithField("title", swagger.Info.Title).WithField("description", swagger.Info.Description).WithField("version", swagger.Info.Version).Info("Ready to convert Swagger / OpenAPI3")
 
 	// Return a new *Converter:
 	return &Converter{

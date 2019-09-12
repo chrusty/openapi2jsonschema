@@ -1,6 +1,9 @@
 package oapi2
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
 
 	openapi2proto "github.com/NYTimes/openapi2proto/openapi"
@@ -24,7 +27,12 @@ func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 		return nil, errors.Wrapf(err, "Unable to load spec (%s)", config.SpecPath)
 	}
 
-	logger.WithField("title", spec.Info.Title).WithField("description", spec.Info.Description).Info("Prepared a converter for Swagger / OpenAPI2")
+	// Make sure the provided spec is really OpenAPI 2.x:
+	if !strings.HasPrefix(spec.Swagger, "2") {
+		return nil, fmt.Errorf("This spec (%s) is not OpenAPI 2.x", spec.Swagger)
+	}
+
+	logger.WithField("title", spec.Info.Title).WithField("description", spec.Info.Description).WithField("version", spec.Info.Version).Info("Ready to convert Swagger / OpenAPI2")
 
 	// Return a new *Converter:
 	return &Converter{
