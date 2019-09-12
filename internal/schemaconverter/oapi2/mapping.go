@@ -269,7 +269,7 @@ func (c *Converter) recurseNestedSchemas(nestedSchemas map[string]*openAPI.Schem
 		c.logger.WithField("nested_schema_name", nestedSchemaName).Trace("Processing nested-items")
 		recursedJSONSchema, err := c.convertItems(nestedSchemaName, nestedSchema)
 		if err != nil {
-			return properties, fmt.Errorf("Failed to convert items %s: %v", nestedSchemaName, err)
+			return properties, errors.Wrapf(err, "Failed to convert items (%s)", nestedSchemaName)
 		}
 		properties[nestedSchemaName] = &recursedJSONSchema
 	}

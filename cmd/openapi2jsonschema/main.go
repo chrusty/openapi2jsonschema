@@ -20,7 +20,7 @@ var (
 func init() {
 	flag.BoolVar(&config.AllowNullValues, "allow_null_values", false, "Allow NULL values as well as the defined types?")
 	flag.BoolVar(&config.BlockAdditionalProperties, "block_additional_properties", false, "Block additional properties?")
-	flag.StringVar(&logLevel, "log_level", "info", "Log level [trace, debug, info, warn, error]")
+	flag.StringVar(&logLevel, "loglevel", "info", "Log level [trace, debug, info, warn, error]")
 	flag.BoolVar(&config.GoConstants, "go_constants", false, "Output GoLang constants (in addition to JSONSchemas)?")
 	flag.StringVar(&config.OutPath, "out", "./out", "Where to write jsonschema output files to")
 	flag.StringVar(&config.SpecPath, "spec", "spec.yaml", "Location of the swagger spec file")
@@ -37,7 +37,7 @@ func main() {
 	// Parse the log-level:
 	parsedLogLevel, err := logrus.ParseLevel(logLevel)
 	if err != nil {
-		logger.WithError(err).Fatal("Unable to parse log_level")
+		logger.WithError(err).Fatal("Unable to parse loglevel")
 	}
 	logger.SetLevel(parsedLogLevel)
 

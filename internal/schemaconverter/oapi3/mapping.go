@@ -98,7 +98,7 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 			}
 
 			if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Ref != "" {
-				_, name, _ := c.splitReferencePath(openAPISchema.Value.AdditionalProperties.Ref)
+				name, _ := c.splitReferencePath(openAPISchema.Value.AdditionalProperties.Ref)
 				if p, ok := c.nestedAdditionalProperties[name]; ok {
 					definitionJSONSchema.AdditionalProperties = p
 				}
@@ -142,7 +142,7 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 		// definitionJSONSchema.Enum = c.mapEnums(enum, []string{definitionJSONSchema.Type})
 
 		if openAPISchema.Ref != "" {
-			_, name, _ := c.splitReferencePath(openAPISchema.Ref)
+			name, _ := c.splitReferencePath(openAPISchema.Ref)
 			if p, ok := c.nestedAdditionalProperties[name]; ok {
 				definitionJSONSchema.AdditionalProperties = p
 			}
@@ -220,23 +220,24 @@ func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaType string) str
 }
 
 // splitReferencePath breaks up a reference path into its components:
-func (c *Converter) splitReferencePath(ref string) (string, string, error) {
+func (c *Converter) splitReferencePath(ref string) (string, error) {
 
-	// split on '/'
+	// split on '/':
 	refDatas := strings.Split(ref, "/")
 
 	// Return the 2nd and 3rd components (source and definition name):
-	if len(refDatas) > 1 {
-		return refDatas[1], refDatas[2], nil
+	if len(refDatas) > 2 {
+		return refDatas[3], nil
 	}
-	return ref, "", fmt.Errorf("Unable to split this reference (%s)", ref)
+	return "", fmt.Errorf("Unable to split this reference (%s)", ref)
 }
 
 // lookupReference looks up a reference and returns its schema and metadata:
 func (c *Converter) lookupReference(referencePath string) (nestedProperties map[string]*openapi3.SchemaRef, definitionJSONSchemaType string, requiredProperties []string, enum []interface{}, err error) {
+	c.logger.WithField("referencePath", referencePath).Trace("Looking up reference")
 
 	// Break up the path:
-	_, reference, err := c.splitReferencePath(referencePath)
+	reference, err := c.splitReferencePath(referencePath)
 	if err != nil {
 		return
 	}
@@ -262,7 +263,7 @@ func (c *Converter) recurseNestedSchemas(nestedSchemas map[string]*openapi3.Sche
 		c.logger.WithField("nested_schema_name", nestedSchemaName).Trace("Processing nested-items")
 		recursedJSONSchema, err := c.convertItems(nestedSchemaName, nestedSchema)
 		if err != nil {
-			return properties, fmt.Errorf("Failed to convert items %s: %v", nestedSchemaName, err)
+			return properties, errors.Wrapf(err, "Failed to convert items (%s)", nestedSchemaName)
 		}
 		properties[nestedSchemaName] = &recursedJSONSchema
 	}
