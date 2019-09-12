@@ -406,32 +406,32 @@ func TestGenerateJSONSchemasNumberWithMinMax(t *testing.T) {
 	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes))
 }
 
-// func TestGenerateJSONSchemasMap(t *testing.T) {
+func TestGenerateJSONSchemasMap(t *testing.T) {
 
-// 	var expectedSchema = `{
-//     "$schema": "http://json-schema.org/draft-04/schema#",
-//     "additionalProperties": {
-//         "additionalProperties": true,
-//         "type": "string"
-//     },
-//     "type": "object"
-// }`
+	var expectedSchema = `{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "additionalProperties": {
+        "additionalProperties": true,
+        "type": "string"
+    },
+    "type": "object"
+}`
 
-// 	// Prepare a new schema converter:
-// 	schemaConverter, err := New(&types.Config{
-// 		AllowNullValues:           false,
-// 		BlockAdditionalProperties: false,
-// 		JSONSchemaFileExtention:   "jsonschema",
-// 		SpecPath:                  "../samples/swagger3_with_map.yaml",
-// 	}, logrus.New())
-// 	require.NoError(t, err)
+	// Prepare a new schema converter:
+	schemaConverter, err := New(&types.Config{
+		AllowNullValues:           false,
+		BlockAdditionalProperties: false,
+		JSONSchemaFileExtention:   "jsonschema",
+		SpecPath:                  "../samples/openapi3/with_map.yaml",
+	}, logrus.New())
+	require.NoError(t, err)
 
-// 	// Convert the spec:
-// 	generatedJSONSchemas, err := schemaConverter.GenerateJSONSchemas()
-// 	require.NoError(t, err)
+	// Convert the spec:
+	generatedJSONSchemas, err := schemaConverter.GenerateJSONSchemas()
+	require.NoError(t, err)
 
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, generatedJSONSchemas)
-// 	assert.Len(t, generatedJSONSchemas, 1)
-// 	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes))
-// }
+	assert.NoError(t, err)
+	assert.NotNil(t, generatedJSONSchemas)
+	assert.Len(t, generatedJSONSchemas, 1)
+	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes))
+}
