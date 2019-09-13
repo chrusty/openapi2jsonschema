@@ -1,0 +1,20 @@
+swagger: '2.0'
+info:
+  description: 'An object with string to string mapping in a refed object'
+  title: 'Sample: mapping in a referenced object 1'
+  version: 1.2.8
+
+definitions:
+
+  RefObject:
+    type: object
+    properties:
+      object_with_map:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/MapStringToString'
+
+  MapStringToString:
+    type: object
+    additionalProperties:
+      type: string

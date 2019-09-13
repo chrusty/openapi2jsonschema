@@ -1,0 +1,60 @@
+openapi: 3.0.1
+info:
+  description: 'A sample object containing an array of a referenced object'
+  title: 'Sample: array of referenced object'
+  version: 1.3.1
+
+components:
+  schemas:
+
+    ObjectWithArrays:
+      type: object
+      required:
+        - group_id
+        - group_name
+        - contacts_schema
+      properties:
+        group_id:
+          type: integer
+          description: Some ID
+          example: 3
+        group_name:
+          type: string
+          description: Some name
+          example: 'Prawns'
+        remarks:
+          type: array
+          items:
+            type: string
+        crufts:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: integer
+              description:
+                type: string
+        contacts_schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferencedArrayObject'
+
+    ReferencedArrayObject:
+      type: object
+      required:
+        - email_address
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email_address:
+          type: string
+        phone_number:
+          type: string
+        spam:
+          type: boolean
+          description: 'Send this person spam?'

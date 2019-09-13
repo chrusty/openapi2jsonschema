@@ -1,2 +1,2 @@
-out
-openapi2jsonschema
+out/*
+bin/*
