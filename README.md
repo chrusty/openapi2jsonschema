@@ -1,8 +1,8 @@
 # openapi2jsonschema
-Produce JSONSchemas from OpenAPI (Swagger) definitions
+Produce JSONSchemas from OpenAPI2 (Swagger) & OpenAPI3 definitions
 
 ## Features
-* Supports OpenAPI2 (Swagger) and OpenAPI3 (with the `-v3` flag)
+* Supports **OpenAPI2** (Swagger) and **OpenAPI3** (with the `-v3` flag)
 * Creates a JSONSchema for each model within the provided spec, and writes each to its own file
 * Optionally generates an importable GoLang package containing constants for each JSONSchema (in case you want to have access to the JSONSchemas from code without having to deal with loading files)
 
