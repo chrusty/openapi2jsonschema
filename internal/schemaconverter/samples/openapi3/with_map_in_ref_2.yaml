@@ -1,0 +1,19 @@
+openapi: 3.0.1
+info:
+  description: 'An object with string to string mapping in a refed object'
+  title: 'Sample: mapping in a referenced object 2'
+  version: 1.3.7
+
+components:
+  schemas:
+
+    RefObject:
+      type: object
+      properties:
+        object_with_map:
+          $ref: '#/components/schemas/MapStringToString'
+
+    MapStringToString:
+      type: object
+      additionalProperties:
+        type: string
