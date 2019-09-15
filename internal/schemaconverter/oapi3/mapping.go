@@ -87,8 +87,8 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 		}
 
 		if c.config.AllowNullValues {
-			if openAPISchema.Value.AdditionalProperties != nil && len(openAPISchema.Value.AdditionalProperties.Value.Type) == 1 {
-				definitionJSONSchema.AdditionalProperties = json.RawMessage(fmt.Sprintf("{\"type\": \"%v\"}", openAPISchema.Value.AdditionalProperties.Value.Type[0]))
+			if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Value != nil {
+				definitionJSONSchema.AdditionalProperties = json.RawMessage(fmt.Sprintf("{\"type\": \"%v\"}", openAPISchema.Value.AdditionalProperties.Value.Type))
 				c.nestedAdditionalProperties[itemName] = definitionJSONSchema.AdditionalProperties
 			}
 
