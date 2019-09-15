@@ -86,21 +86,21 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 			return definitionJSONSchema, err
 		}
 
-		if c.config.AllowNullValues {
-			if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Value != nil {
-				definitionJSONSchema.AdditionalProperties = json.RawMessage(fmt.Sprintf("{\"type\": \"%v\"}", openAPISchema.Value.AdditionalProperties.Value.Type))
-				c.nestedAdditionalProperties[itemName] = definitionJSONSchema.AdditionalProperties
-			}
+		if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Value != nil {
+			definitionJSONSchema.AdditionalProperties = json.RawMessage(fmt.Sprintf("{\"type\": \"%v\"}", openAPISchema.Value.AdditionalProperties.Value.Type))
+			c.nestedAdditionalProperties[itemName] = definitionJSONSchema.AdditionalProperties
+		}
 
-			if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Ref != "" {
-				referenceName, err := c.splitReferencePath(openAPISchema.Value.AdditionalProperties.Ref)
-				if err == nil {
-					if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
-						definitionJSONSchema.AdditionalProperties = p
-					}
+		if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Ref != "" {
+			referenceName, err := c.splitReferencePath(openAPISchema.Value.AdditionalProperties.Ref)
+			if err == nil {
+				if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
+					definitionJSONSchema.AdditionalProperties = p
 				}
 			}
+		}
 
+		if c.config.AllowNullValues {
 			definitionJSONSchema.OneOf = []*jsonSchema.Type{
 				{Type: gojsonschema.TYPE_NULL},
 				{Type: c.mapOpenAPITypeToJSONSchemaType(openAPISchema.Value.Type)},
