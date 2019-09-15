@@ -39,9 +39,10 @@ func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 
 	// Return a new *Converter:
 	return &Converter{
-		config:  config,
-		logger:  logger,
-		swagger: swagger,
+		config:                     config,
+		logger:                     logger,
+		nestedAdditionalProperties: make(map[string]json.RawMessage),
+		swagger:                    swagger,
 	}, nil
 }
 
