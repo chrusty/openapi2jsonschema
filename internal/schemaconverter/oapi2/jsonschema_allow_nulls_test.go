@@ -425,7 +425,9 @@ func TestGenerateJSONSchemasAllowNullsReferencedObject(t *testing.T) {
     ],
     "properties": {
         "contact_additional_props_map": {
-            "additionalProperties": true,
+            "additionalProperties": {
+                "type": "object"
+            },
             "oneOf": [
                 {
                     "type": "null"
