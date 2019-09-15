@@ -8,18 +8,14 @@ import (
 
 	jsonSchema "github.com/alecthomas/jsonschema"
 	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
-	"github.com/xeipuuv/gojsonschema"
-
-	// "github.com/davecgh/go-spew/spew"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/pkg/errors"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // mapOpenAPIDefinitionsToJSONSchema converts an OpenAPI "Spec" into a JSONSchema:
 func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]types.GeneratedJSONSchema, error) {
 	var generatedJSONSchemas []types.GeneratedJSONSchema
-
-	// spew.Dump(c.swagger)
 
 	// Iterate through any schemas we find, creating JSONSchemas for each:
 	for schemaName, schema := range c.swagger.Components.Schemas {
@@ -115,7 +111,6 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 
 		definitionJSONSchema.Required = openAPISchema.Value.Required
 		definitionJSONSchema.Enum = openAPISchema.Value.Enum
-		// definitionJSONSchema.Enum = c.mapEnums(openAPISchema.Value.Enum, openAPISchema.Value.Type)
 
 		if openAPISchema.Value.Format != "" {
 			definitionJSONSchema.Format = openAPISchema.Value.Format
@@ -140,7 +135,6 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 		}
 		definitionJSONSchema.Properties, err = c.recurseNestedSchemas(nestedProperties)
 		definitionJSONSchema.Enum = enum
-		// definitionJSONSchema.Enum = c.mapEnums(enum, []string{definitionJSONSchema.Type})
 
 		if openAPISchema.Ref != "" {
 			referenceName, _ := c.splitReferencePath(openAPISchema.Ref)
@@ -173,23 +167,6 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 
 	return definitionJSONSchema, nil
 }
-
-// // mapEnums maps OpenAPI enums to JSONSchema types:
-// func (c *Converter) mapEnums(items []interface{}, openAPISchemaType string) []interface{} {
-// 	var result []interface{}
-
-// 	for _, item := range items {
-// 		var value interface{}
-// 		if strings.Contains(openAPISchemaType, gojsonschema.TYPE_NUMBER) {
-// 			value, _ = strconv.Atoi(item)
-// 		} else {
-// 			value = item
-// 		}
-// 		result = append(result, value)
-// 	}
-
-// 	return result
-// }
 
 // mapOpenAPITypeToJSONSchemaType maps OpenAPI types to JSONSchema types:
 func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaType string) string {
