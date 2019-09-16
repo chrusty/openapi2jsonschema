@@ -817,26 +817,26 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues2(t *testing.T) 
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"properties": {
 	    "object_with_map": {
-		"additionalProperties": {
-		    "type": "string"
-		},
-		"oneOf": [
-		    {
-			"type": "null"
+		    "additionalProperties": {
+		        "type": "string"
 		    },
-		    {
-			"type": "object"
-		    }
-		]
+		    "oneOf": [
+		        {
+			        "type": "null"
+		        },
+		        {
+			        "type": "object"
+		        }
+		    ]
 	    }
 	},
 	"additionalProperties": true,
 	"oneOf": [
 	    {
-		"type": "null"
+		    "type": "null"
 	    },
 	    {
-		"type": "object"
+		    "type": "object"
 	    }
 	]
 }`

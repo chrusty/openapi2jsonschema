@@ -24,7 +24,7 @@ func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]types.GeneratedJSONSc
 		c.logger.WithField("schema_name", schemaName).Trace("Found a schema")
 
 		// Derive a jsonschema:
-		definitionJSONSchema, err := c.convertItems(schemaName, schema)
+		definitionJSONSchema, err := c.convertSchema(schema)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not derive a json schema")
 		}
@@ -46,7 +46,8 @@ func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]types.GeneratedJSONSc
 	return generatedJSONSchemas, nil
 }
 
-func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.SchemaRef) (jsonSchema.Type, error) {
+// convertSchema converts an OpenAPI Schema into a JSON-Schema:
+func (c *Converter) convertSchema(openAPISchema *openapi3.SchemaRef) (jsonSchema.Type, error) {
 
 	// Prepare a new jsonschema:
 	definitionJSONSchema := jsonSchema.Type{
@@ -88,7 +89,7 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 
 		// See if there are any additionalProperties to convert:
 		if openAPISchema.Value.AdditionalProperties != nil {
-			if convertedAdditionalProperties, err := c.convertItems("cruft", openAPISchema.Value.AdditionalProperties); err == nil {
+			if convertedAdditionalProperties, err := c.convertSchema(openAPISchema.Value.AdditionalProperties); err == nil {
 				c.logger.
 					WithField("AdditionalProperties.Value.Ref", openAPISchema.Value.AdditionalProperties.Ref).
 					WithField("AdditionalProperties.Value.Type", openAPISchema.Value.AdditionalProperties.Value.Type).
@@ -153,7 +154,7 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 
 		// If we have any nested items in the object then we should process them:
 		if openAPISchema.Value.AdditionalProperties != nil {
-			schema, err := c.convertItems(itemName, openAPISchema.Value.AdditionalProperties)
+			schema, err := c.convertSchema(openAPISchema.Value.AdditionalProperties)
 			if err != nil {
 				return definitionJSONSchema, err
 			}
@@ -243,7 +244,7 @@ func (c *Converter) recurseNestedSchemas(nestedSchemas map[string]*openapi3.Sche
 	// Recurse nested items:
 	for nestedSchemaName, nestedSchema := range nestedSchemas {
 		c.logger.WithField("nested_schema_name", nestedSchemaName).Trace("Processing nested-items")
-		recursedJSONSchema, err := c.convertItems(nestedSchemaName, nestedSchema)
+		recursedJSONSchema, err := c.convertSchema(nestedSchema)
 		if err != nil {
 			return properties, errors.Wrapf(err, "Failed to convert items (%s)", nestedSchemaName)
 		}
