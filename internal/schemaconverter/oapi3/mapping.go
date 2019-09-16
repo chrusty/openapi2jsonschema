@@ -86,20 +86,22 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 			return definitionJSONSchema, err
 		}
 
-		if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Value != nil {
-			definitionJSONSchema.AdditionalProperties = json.RawMessage(fmt.Sprintf("{\"type\": \"%v\"}", openAPISchema.Value.AdditionalProperties.Value.Type))
-			c.nestedAdditionalProperties[itemName] = definitionJSONSchema.AdditionalProperties
-		}
-
-		if openAPISchema.Value.AdditionalProperties != nil && openAPISchema.Value.AdditionalProperties.Ref != "" {
-			referenceName, err := c.splitReferencePath(openAPISchema.Value.AdditionalProperties.Ref)
-			if err == nil {
-				if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
-					definitionJSONSchema.AdditionalProperties = p
+		// See if there are any additionalProperties to convert:
+		if openAPISchema.Value.AdditionalProperties != nil {
+			if convertedAdditionalProperties, err := c.convertItems("cruft", openAPISchema.Value.AdditionalProperties); err == nil {
+				c.logger.
+					WithField("AdditionalProperties.Value.Ref", openAPISchema.Value.AdditionalProperties.Ref).
+					WithField("AdditionalProperties.Value.Type", openAPISchema.Value.AdditionalProperties.Value.Type).
+					Tracef("Converted additional properties: %v", convertedAdditionalProperties)
+				additionalPropertiesJSON, err := json.Marshal(convertedAdditionalProperties)
+				if err != nil {
+					return definitionJSONSchema, errors.Wrapf(err, "Unable to marshal additionalProperties to JSON")
 				}
+				definitionJSONSchema.AdditionalProperties = additionalPropertiesJSON
 			}
 		}
 
+		// If we allow nulls then make NULL an option:
 		if c.config.AllowNullValues {
 			definitionJSONSchema.OneOf = []*jsonSchema.Type{
 				{Type: gojsonschema.TYPE_NULL},

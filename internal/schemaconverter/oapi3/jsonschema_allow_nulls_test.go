@@ -1,6 +1,7 @@
 package oapi3
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
@@ -426,7 +427,76 @@ func TestGenerateJSONSchemasAllowNullsReferencedObject(t *testing.T) {
     "properties": {
         "contact_additional_props_map": {
             "additionalProperties": {
-                "type": "object"
+                "required": [
+                    "email_address"
+                ],
+                "properties": {
+                    "email_address": {
+                        "additionalProperties": true,
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "first_name": {
+                        "additionalProperties": true,
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "last_name": {
+                        "additionalProperties": true,
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "phone_number": {
+                        "additionalProperties": true,
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "spam": {
+                        "additionalProperties": true,
+                        "oneOf": [
+                            {
+                                "type": "null"
+                            },
+                            {
+                                "type": "boolean"
+                            }
+                        ],
+                        "description": "Send this person spam?"
+                    }
+                },
+                "additionalProperties": true,
+                "oneOf": [
+                    {
+                        "type": "null"
+                    },
+                    {
+                        "type": "object"
+                    }
+                ]
             },
             "oneOf": [
                 {
@@ -561,7 +631,9 @@ func TestGenerateJSONSchemasAllowNullsReferencedObject(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, generatedJSONSchemas)
 	assert.Len(t, generatedJSONSchemas, 2)
-	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes))
+	if !assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes)) {
+		fmt.Println(string(generatedJSONSchemas[0].Bytes))
+	}
 }
 
 func TestGenerateJSONSchemasAllowNullsNumberWithMinMax(t *testing.T) {
@@ -629,7 +701,9 @@ func TestGenerateJSONSchemasAllowNullsNumberWithMinMax(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, generatedJSONSchemas)
 	assert.Len(t, generatedJSONSchemas, 1)
-	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes))
+	if !assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes)) {
+		fmt.Println(string(generatedJSONSchemas[0].Bytes))
+	}
 }
 
 func TestGenerateJSONSchemasMapAllowingNullValues(t *testing.T) {
@@ -637,7 +711,15 @@ func TestGenerateJSONSchemasMapAllowingNullValues(t *testing.T) {
 	var expectedSchema = `{
     "$schema": "http://json-schema.org/draft-04/schema#",
     "additionalProperties": {
-        "type": "string"
+        "additionalProperties": true,
+        "oneOf": [
+            {
+                "type": "null"
+            },
+            {
+                "type": "string"
+            }
+        ]
     },
     "oneOf": [
         {
@@ -665,37 +747,47 @@ func TestGenerateJSONSchemasMapAllowingNullValues(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, generatedJSONSchemas)
 	assert.Len(t, generatedJSONSchemas, 1)
-	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes))
+	if !assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes)) {
+		fmt.Println(string(generatedJSONSchemas[0].Bytes))
+	}
 }
 
 func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues(t *testing.T) {
 
 	var expectedSchema = `{
-	"$schema": "http://json-schema.org/draft-04/schema#",
-	"properties": {
-	    "object_with_map": {
-		"additionalProperties": {
-		    "type": "string"
-		},
-		"oneOf": [
-		    {
-			"type": "null"
-		    },
-		    {
-			"type": "object"
-		    }
-		]
-	    }
-	},
-	"additionalProperties": true,
-	"oneOf": [
-	    {
-		"type": "null"
-	    },
-	    {
-		"type": "object"
-	    }
-	]
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+        "object_with_map": {
+            "additionalProperties": {
+                "additionalProperties": true,
+                "oneOf": [
+                    {
+                        "type": "null"
+                    },
+                    {
+                        "type": "object"
+                    }
+                ]
+            },
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "object"
+                }
+            ]
+        }
+    },
+    "additionalProperties": true,
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object"
+        }
+    ]
 }`
 
 	// Prepare a new schema converter:
@@ -714,8 +806,9 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, generatedJSONSchemas)
 	assert.Len(t, generatedJSONSchemas, 2)
-	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[1].Bytes))
-
+	if !assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[1].Bytes)) {
+		fmt.Println(string(generatedJSONSchemas[1].Bytes))
+	}
 }
 
 func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues2(t *testing.T) {
@@ -764,5 +857,7 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues2(t *testing.T) 
 	assert.NoError(t, err)
 	assert.NotNil(t, generatedJSONSchemas)
 	assert.Len(t, generatedJSONSchemas, 2)
-	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[1].Bytes))
+	if !assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[1].Bytes)) {
+		fmt.Println(string(generatedJSONSchemas[1].Bytes))
+	}
 }
