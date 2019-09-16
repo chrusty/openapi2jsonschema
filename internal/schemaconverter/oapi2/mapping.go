@@ -101,21 +101,23 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openAPI.Schema)
 			return definitionJSONSchema, err
 		}
 
-		if c.config.AllowNullValues {
-			if openAPISchema.AdditionalProperties != nil && len(openAPISchema.AdditionalProperties.Type) == 1 {
-				definitionJSONSchema.AdditionalProperties = json.RawMessage(fmt.Sprintf("{\"type\": \"%v\"}", openAPISchema.AdditionalProperties.Type[0]))
-				c.nestedAdditionalProperties[itemName] = definitionJSONSchema.AdditionalProperties
-			}
-
-			if openAPISchema.AdditionalProperties != nil && openAPISchema.AdditionalProperties.Ref != "" {
-				referenceName, err := c.splitReferencePath(openAPISchema.AdditionalProperties.Ref)
-				if err == nil {
-					if p, ok := c.nestedAdditionalProperties[referenceName]; ok {
-						definitionJSONSchema.AdditionalProperties = p
-					}
+		// See if there are any additionalProperties to convert:
+		if openAPISchema.AdditionalProperties != nil {
+			if convertedAdditionalProperties, err := c.convertItems("cruft", openAPISchema.AdditionalProperties); err == nil {
+				c.logger.
+					WithField("AdditionalProperties.Ref", openAPISchema.AdditionalProperties.Ref).
+					WithField("AdditionalProperties.Type", openAPISchema.AdditionalProperties.Type).
+					Tracef("Converted additional properties: %v", convertedAdditionalProperties)
+				additionalPropertiesJSON, err := json.Marshal(convertedAdditionalProperties)
+				if err != nil {
+					return definitionJSONSchema, errors.Wrapf(err, "Unable to marshal additionalProperties to JSON")
 				}
+				definitionJSONSchema.AdditionalProperties = additionalPropertiesJSON
 			}
+		}
 
+		// If we allow nulls then make NULL an option:
+		if c.config.AllowNullValues {
 			definitionJSONSchema.OneOf = []*jsonSchema.Type{
 				{Type: gojsonschema.TYPE_NULL},
 				{Type: c.mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)},
@@ -202,8 +204,8 @@ func (c *Converter) mapEnums(items []string, openAPISchemaTypes openAPI.SchemaTy
 func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaTypes openAPI.SchemaType) string {
 
 	// Make sure we were actually given a type:
-	if len(openAPISchemaTypes) == 0 {
-		c.logger.WithField("type", openAPISchemaTypes).Warn("Can't determine JSONSchema type")
+	if len(openAPISchemaTypes) != 1 {
+		c.logger.WithField("type", openAPISchemaTypes).Error("Can't determine JSONSchema type")
 		return gojsonschema.TYPE_NULL
 	}
 
