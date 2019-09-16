@@ -172,7 +172,7 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openapi3.Schema
 func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaType string) string {
 
 	// Make sure we were actually given a type:
-	if len(openAPISchemaType) == 0 {
+	if openAPISchemaType == "" {
 		c.logger.WithField("type", openAPISchemaType).Warn("Can't determine JSONSchema type")
 		return gojsonschema.TYPE_NULL
 	}
