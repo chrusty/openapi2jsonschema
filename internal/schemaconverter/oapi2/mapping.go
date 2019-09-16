@@ -75,15 +75,6 @@ func (c *Converter) convertItems(itemName string, openAPISchema *openAPI.Schema)
 		Maximum:              openAPISchema.Maximum,
 	}
 
-	// // Self-contained schemas:
-	// if openAPISchema.Items != nil {
-	// 	itemsMap, err := c.recurseNestedSchemas(map[string]*openAPI.Schema{"items": openAPISchema.Items})
-	// 	if err != nil {
-	// 		return definitionJSONSchema, err
-	// 	}
-	// 	return *itemsMap["items"], nil
-	// }
-
 	// Arrays of self-defined parameters:
 	if openAPISchema.Ref == "" && openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY) {
 		itemsMap, err := c.recurseNestedSchemas(map[string]*openAPI.Schema{"items": openAPISchema.Items})

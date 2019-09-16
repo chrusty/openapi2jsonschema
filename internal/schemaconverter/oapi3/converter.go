@@ -34,7 +34,7 @@ func New(config *types.Config, logger *logrus.Logger) (*Converter, error) {
 		return nil, fmt.Errorf("This spec (%s) is not OpenAPI 3.x", swagger.OpenAPI)
 	}
 
-	logger.WithField("title", swagger.Info.Title).WithField("version", swagger.Info.Version).Info("Ready to convert Swagger / OpenAPI3")
+	logger.WithField("title", swagger.Info.Title).WithField("version", swagger.Info.Version).WithField("spec_path", config.SpecPath).Info("Ready to convert Swagger / OpenAPI3")
 	logger.WithField("description", swagger.Info.Description).Trace("Description")
 
 	// Return a new *Converter:
