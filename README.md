@@ -6,6 +6,12 @@ Produce JSONSchemas from OpenAPI2 (Swagger) & OpenAPI3 definitions
 * Creates a JSONSchema for each model within the provided spec, and writes each to its own file
 * Optionally generates an importable GoLang package containing constants for each JSONSchema (in case you want to have access to the JSONSchemas from code without having to deal with loading files)
 
+## Install / build / testing
+* Install in your go bin dir: `make install`
+* Build in ./bin: `make build`
+* Run all unit tests: `make test`
+* Generate samples in ./out: `make samples`
+
 ## Usage:
 ```
 Usage of bin/openapi2jsonschema:
