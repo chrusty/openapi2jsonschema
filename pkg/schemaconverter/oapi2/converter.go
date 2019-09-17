@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/types"
 
 	openapi2proto "github.com/NYTimes/openapi2proto/openapi"
 	"github.com/pkg/errors"

@@ -1,10 +1,10 @@
-package oapi2
+package oapi3
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -61,7 +61,7 @@ func TestGenerateJSONSchemasAllowNullsFlatObject(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/flat-object.yaml",
+		SpecPath:                  "../samples/openapi3/flat-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -117,7 +117,7 @@ func TestGenerateJSONSchemasAllowNullsFlatObjectWithEnum(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/flat-object-with-enum.yaml",
+		SpecPath:                  "../samples/openapi3/flat-object-with-enum.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -312,7 +312,7 @@ func TestGenerateJSONSchemasAllowNullsObjectWithArrays(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/array-of-referenced-object.yaml",
+		SpecPath:                  "../samples/openapi3/array-of-referenced-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -402,7 +402,7 @@ func TestGenerateJSONSchemasAllowNullsObjectWithPattern(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/object-with-pattern.yaml",
+		SpecPath:                  "../samples/openapi3/object-with-pattern.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -620,7 +620,7 @@ func TestGenerateJSONSchemasAllowNullsReferencedObject(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/referenced-object.yaml",
+		SpecPath:                  "../samples/openapi3/referenced-object.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -690,7 +690,7 @@ func TestGenerateJSONSchemasAllowNullsNumberWithMinMax(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/flat-object-with-number-options.yaml",
+		SpecPath:                  "../samples/openapi3/flat-object-with-number-options.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -701,7 +701,9 @@ func TestGenerateJSONSchemasAllowNullsNumberWithMinMax(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, generatedJSONSchemas)
 	assert.Len(t, generatedJSONSchemas, 1)
-	assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes))
+	if !assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[0].Bytes)) {
+		fmt.Println(string(generatedJSONSchemas[0].Bytes))
+	}
 }
 
 func TestGenerateJSONSchemasMapAllowingNullValues(t *testing.T) {
@@ -734,7 +736,7 @@ func TestGenerateJSONSchemasMapAllowingNullValues(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/with_map.yaml",
+		SpecPath:                  "../samples/openapi3/with_map.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -793,7 +795,7 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues(t *testing.T) {
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/with_map_in_ref.yaml",
+		SpecPath:                  "../samples/openapi3/with_map_in_ref.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 
@@ -807,7 +809,6 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues(t *testing.T) {
 	if !assert.JSONEq(t, expectedSchema, string(generatedJSONSchemas[1].Bytes)) {
 		fmt.Println(string(generatedJSONSchemas[1].Bytes))
 	}
-
 }
 
 func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues2(t *testing.T) {
@@ -845,7 +846,7 @@ func TestGenerateJSONSchemasMapInAReffedObjectAllowingNullValues2(t *testing.T) 
 		AllowNullValues:           true,
 		BlockAdditionalProperties: false,
 		JSONSchemaFileExtention:   "jsonschema",
-		SpecPath:                  "../samples/swagger2/with_map_in_ref_2.yaml",
+		SpecPath:                  "../samples/openapi3/with_map_in_ref_2.yaml",
 	}, logrus.New())
 	require.NoError(t, err)
 

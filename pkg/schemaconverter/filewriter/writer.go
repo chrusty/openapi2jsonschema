@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/types"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"

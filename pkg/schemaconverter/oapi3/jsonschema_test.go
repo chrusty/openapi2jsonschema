@@ -3,7 +3,7 @@ package oapi3
 import (
 	"testing"
 
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

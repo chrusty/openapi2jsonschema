@@ -1,14 +1,16 @@
-package oapi3
+package oapi2
 
 import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/types"
+
+	openAPI "github.com/NYTimes/openapi2proto/openapi"
 	jsonSchema "github.com/alecthomas/jsonschema"
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -17,8 +19,20 @@ import (
 func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]types.GeneratedJSONSchema, error) {
 	var generatedJSONSchemas []types.GeneratedJSONSchema
 
+	// // if we have no definitions then copy them from parameters:
+	// if c.spec.Definitions == nil {
+	// 	c.logger.Debug("No definitions found - copying from parameters")
+	// 	c.spec.Definitions = map[string]*openAPI.Schema{}
+
+	// 	// jam all the parameters into the normal 'definitions' for easier reference.
+	// 	for paramName, param := range c.spec.Parameters {
+	// 		c.logger.WithField("parameter_name", paramName).Trace("Found a parameter")
+	// 		c.spec.Parameters[paramName] = param
+	// 	}
+	// }
+
 	// Iterate through any schemas we find, creating JSONSchemas for each:
-	for schemaName, schema := range c.swagger.Components.Schemas {
+	for schemaName, schema := range c.spec.Definitions {
 		var generatedJSONSchema types.GeneratedJSONSchema
 
 		c.logger.WithField("schema_name", schemaName).Trace("Found a schema")
@@ -47,32 +61,23 @@ func (c *Converter) mapOpenAPIDefinitionsToJSONSchema() ([]types.GeneratedJSONSc
 }
 
 // convertSchema converts an OpenAPI Schema into a JSON-Schema:
-func (c *Converter) convertSchema(openAPISchema *openapi3.SchemaRef) (jsonSchema.Type, error) {
+func (c *Converter) convertSchema(openAPISchema *openAPI.Schema) (jsonSchema.Type, error) {
 
 	// Prepare a new jsonschema:
 	definitionJSONSchema := jsonSchema.Type{
 		AdditionalProperties: c.generateAdditionalProperties(),
-		Description:          strings.Replace(openAPISchema.Value.Description, "`", "'", -1),
-		MinLength:            int(openAPISchema.Value.MinLength),
-		Pattern:              openAPISchema.Value.Pattern,
+		Description:          strings.Replace(openAPISchema.Description, "`", "'", -1),
+		MaxLength:            openAPISchema.MaxLength,
+		MinLength:            openAPISchema.MinLength,
+		Pattern:              openAPISchema.Pattern,
 		Properties:           make(map[string]*jsonSchema.Type),
-	}
-
-	if openAPISchema.Value.MaxLength != nil {
-		definitionJSONSchema.MaxLength = int(*openAPISchema.Value.MaxLength)
-	}
-
-	if openAPISchema.Value.Min != nil {
-		definitionJSONSchema.Minimum = int(*openAPISchema.Value.Min)
-	}
-
-	if openAPISchema.Value.Max != nil {
-		definitionJSONSchema.Maximum = int(*openAPISchema.Value.Max)
+		Minimum:              openAPISchema.Minimum,
+		Maximum:              openAPISchema.Maximum,
 	}
 
 	// Arrays of self-defined parameters:
-	if openAPISchema.Ref == "" && strings.Contains(openAPISchema.Value.Type, gojsonschema.TYPE_ARRAY) {
-		itemsMap, err := c.recurseNestedSchemas(map[string]*openapi3.SchemaRef{"items": openAPISchema.Value.Items})
+	if openAPISchema.Ref == "" && openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY) {
+		itemsMap, err := c.recurseNestedSchemas(map[string]*openAPI.Schema{"items": openAPISchema.Items})
 		if err != nil {
 			return definitionJSONSchema, err
 		}
@@ -80,19 +85,19 @@ func (c *Converter) convertSchema(openAPISchema *openapi3.SchemaRef) (jsonSchema
 	}
 
 	// Single-instances of self-defined parameters:
-	if openAPISchema.Ref == "" && !strings.Contains(openAPISchema.Value.Type, gojsonschema.TYPE_ARRAY) && openAPISchema.Value.Items == nil {
-		properties, err := c.recurseNestedSchemas(openAPISchema.Value.Properties)
+	if openAPISchema.Ref == "" && !openAPISchema.Type.Contains(gojsonschema.TYPE_ARRAY) && openAPISchema.Items == nil {
+		properties, err := c.recurseNestedSchemas(openAPISchema.Properties)
 		definitionJSONSchema.Properties = properties
 		if err != nil {
 			return definitionJSONSchema, err
 		}
 
 		// See if there are any additionalProperties to convert:
-		if openAPISchema.Value.AdditionalProperties != nil {
-			if convertedAdditionalProperties, err := c.convertSchema(openAPISchema.Value.AdditionalProperties); err == nil {
+		if openAPISchema.AdditionalProperties != nil {
+			if convertedAdditionalProperties, err := c.convertSchema(openAPISchema.AdditionalProperties); err == nil {
 				c.logger.
-					WithField("AdditionalProperties.Value.Ref", openAPISchema.Value.AdditionalProperties.Ref).
-					WithField("AdditionalProperties.Value.Type", openAPISchema.Value.AdditionalProperties.Value.Type).
+					WithField("AdditionalProperties.Ref", openAPISchema.AdditionalProperties.Ref).
+					WithField("AdditionalProperties.Type", openAPISchema.AdditionalProperties.Type).
 					Tracef("Converted additional properties: %v", convertedAdditionalProperties)
 				additionalPropertiesJSON, err := json.Marshal(convertedAdditionalProperties)
 				if err != nil {
@@ -106,22 +111,23 @@ func (c *Converter) convertSchema(openAPISchema *openapi3.SchemaRef) (jsonSchema
 		if c.config.AllowNullValues {
 			definitionJSONSchema.OneOf = []*jsonSchema.Type{
 				{Type: gojsonschema.TYPE_NULL},
-				{Type: c.mapOpenAPITypeToJSONSchemaType(openAPISchema.Value.Type)},
+				{Type: c.mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)},
 			}
 		} else {
-			definitionJSONSchema.Type = c.mapOpenAPITypeToJSONSchemaType(openAPISchema.Value.Type)
+			definitionJSONSchema.Type = c.mapOpenAPITypeToJSONSchemaType(openAPISchema.Type)
 		}
 
-		definitionJSONSchema.Required = openAPISchema.Value.Required
-		definitionJSONSchema.Enum = openAPISchema.Value.Enum
+		definitionJSONSchema.Required = openAPISchema.Required
+		definitionJSONSchema.Enum = c.mapEnums(openAPISchema.Enum, openAPISchema.Type)
 
-		if openAPISchema.Value.Format != "" {
-			definitionJSONSchema.Format = openAPISchema.Value.Format
+		if openAPISchema.Format != "" {
+			definitionJSONSchema.Format = openAPISchema.Format
 		}
 	}
 
 	// Referenced models:
 	if openAPISchema.Ref != "" {
+		var enum []string
 		var lookedupReferenceType string
 		nestedProperties, lookedupReferenceType, required, enum, err := c.lookupReference(openAPISchema.Ref)
 		if err != nil {
@@ -137,7 +143,7 @@ func (c *Converter) convertSchema(openAPISchema *openapi3.SchemaRef) (jsonSchema
 			definitionJSONSchema.Type = lookedupReferenceType
 		}
 		definitionJSONSchema.Properties, err = c.recurseNestedSchemas(nestedProperties)
-		definitionJSONSchema.Enum = enum
+		definitionJSONSchema.Enum = c.mapEnums(enum, []string{definitionJSONSchema.Type})
 
 		if openAPISchema.Ref != "" {
 			referenceName, _ := c.splitReferencePath(openAPISchema.Ref)
@@ -152,12 +158,9 @@ func (c *Converter) convertSchema(openAPISchema *openapi3.SchemaRef) (jsonSchema
 	// Maintain a list of required items:
 	if definitionJSONSchema.Type == gojsonschema.TYPE_OBJECT {
 
-		// If we have any nested items in the object then we should process them:
-		if openAPISchema.Value.AdditionalProperties != nil {
-			schema, err := c.convertSchema(openAPISchema.Value.AdditionalProperties)
-			if err != nil {
-				return definitionJSONSchema, err
-			}
+		// if we have any nested items in the object then we should process them
+		if additionalPropertiesSchema := openAPISchema.AdditionalProperties; additionalPropertiesSchema != nil {
+			schema, err := c.convertSchema(additionalPropertiesSchema)
 
 			// Annoyingly since "additionalProperties" can actually be a
 			// boolean or an object we have to marshal the resulting schema
@@ -171,17 +174,34 @@ func (c *Converter) convertSchema(openAPISchema *openapi3.SchemaRef) (jsonSchema
 	return definitionJSONSchema, nil
 }
 
+// mapEnums maps OpenAPI enums to JSONSchema types:
+func (c *Converter) mapEnums(items []string, openAPISchemaTypes openAPI.SchemaType) []interface{} {
+	var result []interface{}
+
+	for _, item := range items {
+		var value interface{}
+		if openAPISchemaTypes.Contains(gojsonschema.TYPE_NUMBER) {
+			value, _ = strconv.Atoi(item)
+		} else {
+			value = item
+		}
+		result = append(result, value)
+	}
+
+	return result
+}
+
 // mapOpenAPITypeToJSONSchemaType maps OpenAPI types to JSONSchema types:
-func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaType string) string {
+func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaTypes openAPI.SchemaType) string {
 
 	// Make sure we were actually given a type:
-	if openAPISchemaType == "" {
-		c.logger.WithField("type", openAPISchemaType).Warn("Can't determine JSONSchema type")
+	if len(openAPISchemaTypes) != 1 {
+		c.logger.WithField("type", openAPISchemaTypes).Error("Can't determine JSONSchema type")
 		return gojsonschema.TYPE_NULL
 	}
 
 	// Switch on the first type:
-	switch openAPISchemaType {
+	switch openAPISchemaTypes[0] {
 	case "array":
 		return gojsonschema.TYPE_ARRAY
 	case "boolean":
@@ -197,26 +217,26 @@ func (c *Converter) mapOpenAPITypeToJSONSchemaType(openAPISchemaType string) str
 	case "":
 		return gojsonschema.TYPE_NULL
 	default:
-		c.logger.WithField("type", openAPISchemaType).Warn("Can't determine JSONSchema type")
+		c.logger.WithField("type", openAPISchemaTypes).Warn("Can't determine JSONSchema type")
 		return gojsonschema.TYPE_NULL
 	}
 }
 
-// splitReferencePath breaks up a reference path into its components (OpenAPI3 references look like "#/components/schemas/Something"):
+// splitReferencePath breaks up a reference path into its components (OpenAPI2 references look like "#/definitions/Something"):
 func (c *Converter) splitReferencePath(ref string) (string, error) {
 
 	// split on '/':
 	refDatas := strings.Split(ref, "/")
 
-	// Return the 4th component (definition name):
-	if len(refDatas) > 2 {
-		return refDatas[3], nil
+	// Return the 3rd component (definition name):
+	if len(refDatas) > 1 {
+		return refDatas[2], nil
 	}
 	return "", fmt.Errorf("Unable to split this reference (%s)", ref)
 }
 
 // lookupReference looks up a reference and returns its schema and metadata:
-func (c *Converter) lookupReference(referencePath string) (nestedProperties map[string]*openapi3.SchemaRef, definitionJSONSchemaType string, requiredProperties []string, enum []interface{}, err error) {
+func (c *Converter) lookupReference(referencePath string) (nestedProperties map[string]*openAPI.Schema, definitionJSONSchemaType string, requiredProperties []string, enum []string, err error) {
 	c.logger.WithField("referencePath", referencePath).Trace("Looking up reference")
 
 	// Break up the path:
@@ -227,18 +247,18 @@ func (c *Converter) lookupReference(referencePath string) (nestedProperties map[
 
 	// Look up the referenced model:
 	c.logger.WithField("reference", referenceName).Trace("Found a referenced model")
-	referencedDefinition, ok := c.swagger.Components.Schemas[referenceName]
+	referencedDefinition, ok := c.spec.Definitions[referenceName]
 	if !ok {
 		err = fmt.Errorf("Unable to find a referenced model (%s)", referenceName)
 		return
 	}
 
 	// Use the model's items, type, and required-properties:
-	return referencedDefinition.Value.Properties, c.mapOpenAPITypeToJSONSchemaType(referencedDefinition.Value.Type), referencedDefinition.Value.Required, referencedDefinition.Value.Enum, nil
+	return referencedDefinition.Properties, c.mapOpenAPITypeToJSONSchemaType(referencedDefinition.Type), referencedDefinition.Required, referencedDefinition.Enum, nil
 }
 
 // recurseNestedSchemas converts nested openAPISchemas:
-func (c *Converter) recurseNestedSchemas(nestedSchemas map[string]*openapi3.SchemaRef) (properties map[string]*jsonSchema.Type, err error) {
+func (c *Converter) recurseNestedSchemas(nestedSchemas map[string]*openAPI.Schema) (properties map[string]*jsonSchema.Type, err error) {
 	properties = make(map[string]*jsonSchema.Type)
 
 	// Recurse nested items:

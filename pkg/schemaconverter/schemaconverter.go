@@ -1,10 +1,10 @@
 package schemaconverter
 
 import (
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/filewriter"
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/oapi2"
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/oapi3"
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/filewriter"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/oapi2"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/oapi3"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/types"
 
 	"github.com/sirupsen/logrus"
 )

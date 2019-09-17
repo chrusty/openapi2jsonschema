@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter"
-	"github.com/chrusty/openapi2jsonschema/internal/schemaconverter/types"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter"
+	"github.com/chrusty/openapi2jsonschema/pkg/schemaconverter/types"
 
 	"github.com/sirupsen/logrus"
 )
