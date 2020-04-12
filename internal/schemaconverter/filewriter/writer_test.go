@@ -45,3 +45,10 @@ func TestWriteToFile(t *testing.T) {
 	assert.NoError(t, schemaWriter.writeToFile("/tmp/cruft", []byte("cruft")))
 	assert.Error(t, schemaWriter.writeToFile("/cruft/cruft.cft", []byte("cruft")))
 }
+
+func TestFormatGoConstant(t *testing.T) {
+	schemaWriter := New(&types.Config{}, logrus.New())
+
+	generatedCruft := schemaWriter.formatGoConstant("cruft.yaml", "CruftSchema", "-90")
+	assert.Equal(t, "const SchemaCruft.YamlCruftSchema string = `-90`\n\n", generatedCruft)
+}

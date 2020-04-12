@@ -57,9 +57,7 @@ func (w *Writer) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJS
 
 	// Go through the JSONSchemas and write each one to a file:
 	for _, generatedJSONSchema := range generatedJSONSchemas {
-		definitionConstant := fmt.Sprintf("const Schema%s%s string = `%s`\n\n", strings.Title(specFileName), strings.Title(generatedJSONSchema.Name), generatedJSONSchema.Bytes)
-		definitionConstant = strings.ReplaceAll(definitionConstant, "-", "") // Get rid of hyphens
-		goConstantsCode = append(goConstantsCode, definitionConstant...)
+		goConstantsCode = append(goConstantsCode, w.formatGoConstant(specFileName, generatedJSONSchema.Name, string(generatedJSONSchema.Bytes))...)
 	}
 
 	// Write the schemaJSON out to a file:
@@ -70,6 +68,14 @@ func (w *Writer) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJS
 	w.logger.WithField("go_constants_filename", goConstantsFilename).Debug("Wrote GoLang constants to a file")
 
 	return nil
+}
+
+// Format the generated Go constant:
+func (w *Writer) formatGoConstant(specFileName, schemaName, schema string) string {
+	strippedSpecFileName := strings.ReplaceAll(strings.Title(specFileName), "-", "")
+	strippedSchemaName := strings.ReplaceAll(strings.Title(schemaName), "-", "")
+
+	return fmt.Sprintf("const Schema%s%s string = `%s`\n\n", strippedSpecFileName, strippedSchemaName, schema)
 }
 
 // deriveGoConstantsFilename derives the go-constants filename:
