@@ -57,8 +57,7 @@ func (w *Writer) WriteGoConstantsToFile(generatedJSONSchemas []types.GeneratedJS
 
 	// Go through the JSONSchemas and write each one to a file:
 	for _, generatedJSONSchema := range generatedJSONSchemas {
-		definitionConstant := fmt.Sprintf("const Schema%s%s string = `%s`\n\n", strings.Title(specFileName), strings.Title(generatedJSONSchema.Name), generatedJSONSchema.Bytes)
-		definitionConstant = strings.ReplaceAll(definitionConstant, "-", "") // Get rid of hyphens
+		definitionConstant := fmt.Sprintf("const Schema%s%s string = `%s`\n\n", strings.ReplaceAll(strings.Title(specFileName), "-", ""), strings.ReplaceAll(strings.Title(generatedJSONSchema.Name), "-", ""), generatedJSONSchema.Bytes)
 		goConstantsCode = append(goConstantsCode, definitionConstant...)
 	}
 
